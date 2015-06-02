@@ -6,6 +6,7 @@ project(cmake-compile-features)
 
 # - Always verbose so user can see compile flags
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
 #-----------------------------------------------------------------------
 # Compiler Info
 # - Print, for info, detected Compiler and Version
@@ -64,6 +65,10 @@ set(THIS_REQUIRED_FEATURES
   # Rest of concurrency more a library feature?
   )
 
+#-----------------------------------------------------------------------
+# - Extra checks for library features?
+# *Probably* need to do this *after* any setting of features.
+include(cmake/CheckCXXFeature.cmake)
 
 #-----------------------------------------------------------------------
 # Try and compile a program with the required feature list
