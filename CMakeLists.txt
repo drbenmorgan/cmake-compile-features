@@ -22,20 +22,24 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # for. Does *not* mean compiler supports them
 # See also
 # http://www.cmake.org/cmake/help/v3.2/prop_gbl/CMAKE_CXX_KNOWN_FEATURES.html
-message(STATUS "List of known CXX features known to CMake")
+message(STATUS "List of CXX features known to CMake")
 get_property(_cxx_known_features GLOBAL PROPERTY CMAKE_CXX_KNOWN_FEATURES)
 foreach(_f ${_cxx_known_features})
   message("  ${_f}")
 endforeach()
 
+
+
 # - whereas CMAKE_CXX_COMPILE_FEATURES should list those the compiler
 #   actually supports
-# - ?How to add further checks for features not
 message(STATUS "List of supported CXX features")
-get_property(_cxx_compile_features GLOBAL PROPERTY CMAKE_CXX_COMPILE_FEATURES)
 foreach(_f ${CMAKE_CXX_COMPILE_FEATURES})
   message("  ${_f}")
 endforeach()
+
+
+# - Include mopdule for helping to check C++ stdlib features?
+include(cmake/CheckCXXFeature.cmake)
 
 #-----------------------------------------------------------------------
 # Based on Geant4 initial support, list absolute required features
@@ -58,17 +62,17 @@ set(THIS_REQUIRED_FEATURES
   cxx_lambdas
   # Hashed containers more a library feature?
   # Random numbers more a library feature?
-
   # - Thread local? Yes, though on AppleClang platforms, see this:
   #http://stackoverflow.com/questions/28094794/why-does-apple-clang-disallow-c11-thread-local-when-official-clang-supports
-  #cxx_thread_local
   # Rest of concurrency more a library feature?
   )
 
-#-----------------------------------------------------------------------
-# - Extra checks for library features?
-# *Probably* need to do this *after* any setting of features.
-include(cmake/CheckCXXFeature.cmake)
+# Check lib features?
+# Works, but can't then add these to list of known/supported features...
+check_cxx11_feature("memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
+check_cxx11_feature("memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
+check_cxx11_feature("memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
+check_cxx11_feature("memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
 
 #-----------------------------------------------------------------------
 # Try and compile a program with the required feature list
