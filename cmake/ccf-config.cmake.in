@@ -1,0 +1,8 @@
+set(CCF_VERSION 1.2.3)
+
+@PACKAGE_INIT@
+
+set_and_check(CCF_INCLUDE_DIR "@PACKAGE_INSTALL_INCDIR@")
+
+include(${PACKAGE_PREFIX_DIR}/ccf-exports.cmake)
+
