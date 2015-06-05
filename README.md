@@ -23,9 +23,9 @@ $ make
 
 # Noted issues
 ## Intel support
-Appears that there isn't support for compile features of Intel compiler.
-Need to find out if an extension can be provided, or whether we have
-to wait for upstream CMake to support this.
+Appears that there isn't support for compile features or header detection
+on the Intel compiler. Need to find out if an extension can be provided,
+or whether we have to wait for upstream CMake to support this.
 
 ## Compiler vs Library Features
 Difference between *compiler* features and *library* features. CMake's
@@ -42,3 +42,6 @@ Certainly need compile checks for these - but these are easy to write.
 Apple's Clang that comes with Xcode doesn't support this at present.
 There's [a discussion on StackOverflow}(http://stackoverflow.com/questions/28094794/why-does-apple-clang-disallow-c11-thread-local-when-official-clang-supports). An upstream issue with Apple, so have to await their implementation of this. Not yet clear if this affects libc++ concurrency support.
 
+It's possible to provide workarounds here via the compiler detection
+header part of CMake (see the `ccf_compiler_detection_header.hpp` file
+created in the build directory).

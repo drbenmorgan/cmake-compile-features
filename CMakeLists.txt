@@ -4,10 +4,10 @@
 cmake_minimum_required(VERSION 3.2)
 project(cmake-compile-features)
 
-# - Always verbose so user can see compile flags
+# - Always verbose so we can see compile flags
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-# - Enumerated option
+# - Enumerated option to allow C++ Standard selection
 include(cmake/EnumeratedOption.cmake)
 
 # - Include module for helping to check C++ stdlib features
@@ -22,12 +22,16 @@ message(STATUS "CXX compiler Version: '${CMAKE_CXX_COMPILER_VERSION}'")
 
 #-----------------------------------------------------------------------
 # C++ Standard Selection - 11, 14 or 17
+# Not used yet - the primary use case for this over compile features
+# is for clients to compile the project against a newer standard.
+# That's sometimes needed to ensure ABI compatibility (e.g. libstdc++
+# had/has different ABIs for C++98/11). The main issue here is
+# any cases of non-forward compatibility.
 enum_option(BUILD_CXX_STANDARD
   DOC "C++ Standard to compile against"
   VALUES 11 14 17
   CASE_INSENSITIVE
   )
-
 
 #-----------------------------------------------------------------------
 # Compiler features
@@ -52,9 +56,9 @@ foreach(_f ${CMAKE_CXX_COMPILE_FEATURES})
 endforeach()
 
 #-----------------------------------------------------------------------
-# Based on Geant4 initial support, list absolute required features
+# Based on Ivana's document, list absolute required features
 # These are CMake compile features
-set(THIS_REQUIRED_FEATURES
+set(CCF_REQUIRED_FEATURES
   cxx_auto_type
   cxx_range_for
   cxx_generalized_initializers
@@ -68,45 +72,69 @@ set(THIS_REQUIRED_FEATURES
   cxx_delegating_constructors
   cxx_inheriting_constructors
   cxx_defaulted_functions
-  # Smart pointers more a library feature?
+  # Smart pointers are a library implementation feature
   cxx_lambdas
-  # Hashed containers more a library feature?
-  # Random numbers more a library feature?
+  # Hashed containers are a library implementation feature
+  # Random numbers are a library implementation feature?
   # - Thread local? Yes, though on AppleClang platforms, see this:
   #http://stackoverflow.com/questions/28094794/why-does-apple-clang-disallow-c11-thread-local-when-official-clang-supports
-  # Rest of concurrency more a library feature?
+  # An example of where a workaround is needed
+  # Rest of concurrency a library implementation feature
+  )
+
+# - Can also write a compiler detection header. This is useful
+# for providing workarounds such as for the thread_local case above
+# Only issue here is that it doesn't at support Intel yet...
+# Note that this project doesn't use the header, it's purely here
+# to show how it's generated.
+include(WriteCompilerDetectionHeader)
+write_compiler_detection_header(
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/ccf_compiler_detection.hpp"
+  PREFIX CCF
+  COMPILERS GNU Clang AppleClang MSVC
+  FEATURES
+    cxx_thread_local
+  PROLOG "// This is a custom prolog"
+  EPILOG "// This is a custom epilog"
   )
 
 # Check lib features - these are things we need but for which CMake
 # provides no feature detection (i.e. are implementation details of
 # the Standard C++ library being used)
-# Works, but can't then add these to list of known/supported features...
+# Works, but can't then add these to list of known/supported features
+# and get automatic compiler flag support
 # Can always fail at configure stage based on truth of HAS_CXX_...
-# variables
+# variables, or add these into the PROLOG/EPILOG entries of the compiler
+# detection header
 check_cxx11_feature("memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
 check_cxx11_feature("memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
 check_cxx11_feature("memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
 check_cxx11_feature("memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
 
 #-----------------------------------------------------------------------
-# Try and compile a program with the required feature list
-# - When building, the appropriate flag should be added to the compile
-# command, but of course doesn't account for additional stdlib features
-add_executable(basic-program basic-program.cpp)
-target_compile_features(basic-program PUBLIC ${THIS_REQUIRED_FEATURES})
+# Compile this project's library.
+add_library(ccf SHARED ccf.hpp ccf.cpp)
 
+#... with the required compile features
+# PUBLIC means that clients of libccf will inherit the features of ccf
+# and hence be compiled with the appropriate flags
+target_compile_features(ccf PUBLIC ${CCF_REQUIRED_FEATURES})
 
 #-----------------------------------------------------------------------
-# Now a library
-add_library(ccf SHARED ccf.hpp ccf.cpp)
-target_compile_features(ccf PUBLIC ${THIS_REQUIRED_FEATURES})
+# Now the project program (equally, this could be a client program)
+add_executable(ccf-program ccf-program.cpp)
+
+#... and link it to the library. Even though we haven't see compile_features
+# for the program, it "inherits" the PUBLIC ones from the target.
+# In consequence, it's compiled with the appropriate flags!
+target_link_libraries(ccf-program ccf)
 
 #-----------------------------------------------------------------------
 # Install...
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake")
 
-install(TARGETS ccf EXPORT ccf-exports DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+install(TARGETS ccf ccf-program EXPORT ccf-exports DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(FILES ccf.hpp DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 #-----------------------------------------------------------------------
@@ -115,9 +143,10 @@ install(FILES ccf.hpp DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 #   compiler requirements
 # What you should find is that the "ccf-exports.cmake" file sets up an
 # imported target for libccf, and sets the INTERFACE_COMPILE_FEATURES
-# to those listed in 'THIS_REQUIRED_FEATURES'. That means that clients
+# to those listed in 'CCF_REQUIRED_FEATURES'. That means that clients
 # compiling with CMake and linking to the library will also require
 # those features (and hence be compiled against the required standard).
+# It's basically the same behaviour seen above with ccf-program
 # The issue of course is that other features like shared_ptr and so
 # on cannot be added to this list
 
@@ -147,7 +176,7 @@ set(INSTALL_INCDIR "${CMAKE_INSTALL_INCLUDEDIR}")
 
 configure_package_config_file(cmake/ccf-config.cmake.in
   ${PROJECT_BINARY_DIR}/InstallTreeFiles/ccf-config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_CMAKEDIR}/ccf
+  INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/ccf"
   PATH_VARS INSTALL_INCDIR
   )
 
