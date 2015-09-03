@@ -104,9 +104,14 @@ set(CCF_REQUIRED_FEATURES
 # to show how it's generated.
 include(WriteCompilerDetectionHeader)
 write_compiler_detection_header(
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/ccf_compiler_detection.hpp"
+  # Public, detail or private header? Probably private unless CCF
+  # exposes types in other public interfaces
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/ccf/ccf_compiler_detection.hpp"
   PREFIX CCF
   COMPILERS GNU Clang AppleClang MSVC
+  # Separate headers on a per compiler basis for clarity
+  OUTPUT_DIR ccf/detail/Compilers
+  OUTPUT_FILES_VAR CCF_COMPILER_HEADERS
   FEATURES
     cxx_thread_local
   PROLOG "// This is a custom prolog"
@@ -142,6 +147,9 @@ check_cxx11_feature("cxx_memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
 check_cxx11_feature("cxx_memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
 check_cxx11_feature("cxx_memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
 check_cxx11_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
+check_cxx11_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
+check_cxx11_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
+check_cxx11_feature("cxx_random" HAS_CXX_RANDOM)
 
 #-----------------------------------------------------------------------
 # Compile this project's library using compile features
@@ -159,9 +167,11 @@ set_target_properties(ccf-standard
   PROPERTIES
    CXX_STANDARD ${BUILD_CXX_STANDARD}
    CXX_STANDARD_REQUIRED TRUE
-   # NB if we *also* use COMPILE_FEATURES, then the newest standard takes
-   # precedence
-   COMPILE_FEATURES cxx_user_literals
+   # NB if we *also* use COMPILE_FEATURES, then the newest out of
+   # BUILD_CXX_STANDARD and COMPILE_FEATURES takes precedence. For
+   # example, if BUILD_CXX_STANDARD is '11' but COMPILE_FEATURES contains
+   # a C++14 feature, then C++14 will be used.
+   COMPILE_FEATURES "${CCF_REQUIRED_FEATURES}"
   )
 
 
@@ -193,7 +203,8 @@ install(FILES ccf.hpp DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 # those features (and hence be compiled against the required standard).
 # It's basically the same behaviour seen above with ccf-program
 # The issue of course is that other features like shared_ptr and so
-# on cannot be added to this list
+# on cannot be added to this list - this is where listing the stdlib
+# implementation and details may be useful.
 
 include(CMakePackageConfigHelpers)
 
