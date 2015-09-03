@@ -33,10 +33,17 @@ they will be recognized by targets using them as supported, e.g.
 ```cmake
 if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   message(STATUS "CMAKE_COMPILER_ID matches 'Intel'")
+  # No version checking yet, that's needed for full implementation
   set(CMAKE_CXX11_COMPILE_FEATURES cxx_auto_type cxx_range_for)
   set(CMAKE_CXX_COMPILE_FEATURES ${CMAKE_CXX11_COMPILE_FEATURES})
   set(CMAKE_CXX11_STANDARD_COMPILE_OPTION "-std=c++11")
   set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "-std=c++11")
+  set(CMAKE_CXX98_STANDARD_COMPILE_OPTION  "-std=c++11")
+  set(CMAKE_CXX98_EXTENSION_COMPILE_OPTION "-std=c++98")
+
+  # This is the critical variable, there must be a default when the compiler
+  # has the notion of standards
+  set(CMAKE_CXX_STANDARD_DEFAULT "98")
 endif()
 
 ...
@@ -45,11 +52,8 @@ add_executable(myprogram myprogram.cpp)
 target_compile_features(myprogram PRIVATE cxx_auto_type)
 ```
 
-However, it appears the `_COMPILE_OPTION` variables are *not* added
-into the compiler commands. Tests with GNU and Clang show that this
-variable can be manipulated after `project` is called and the changes
-passed onto the command line. This suggests other settings are happening
-as part of the setup of the CXX compiler.
+The critical setting is the `CMAKE_CXX_STANDARD_DEFAULT` variable. This is
+required for compilers that have the notion of setting the standard.
 
 ## Compiler vs Library Features
 Important to note the difference between *compiler* (syntax) features and
@@ -119,4 +123,15 @@ passed down to consuming targets though, so would not be of great use.
 Another possibility is to use the `INTERFACE_COMPILE_OPTIONS` target property to pass down any relevant flags to the
 compiler, but this requires some work with generator expressions to
 choose between compilers.
+
+The final option is to artifically add a single C++14 compile feature to the
+required list if the compiler support C++14. This would work, but the single
+option would need to be supported across all compilers.
+
+- Intel : `cxx_binary_literals` seems reasonable from 11-14, auto return types from 15
+- MSVC : auto/decltype(auto) return types or init captures from VS14, binary literals from VS15
+- GNU : binary literals from 4.9, auto return type from 4.8
+- Clang : binary literals from 2.9, decltype(auto) from 3.3, and 3.3 is minimum to be C++11 complete.
+
+So using the `cxx_decltype_auto` feature would probably be sufficient.
 

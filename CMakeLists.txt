@@ -176,7 +176,7 @@ target_link_libraries(ccf-program ccf-features)
 # standard should use that rather than the lower one of what's being
 # consumed
 add_executable(ccf14-program ccf-program.cpp)
-target_compile_features(ccf14-program PUBLIC cxx_binary_literals)
+#target_compile_features(ccf1dd4-program PUBLIC cxx_binary_literals)
 target_link_libraries(ccf14-program ccf-features)
 
 
