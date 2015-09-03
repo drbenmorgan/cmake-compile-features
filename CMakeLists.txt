@@ -39,11 +39,12 @@ message(STATUS "CXX compiler Version: '${CMAKE_CXX_COMPILER_VERSION}'")
 # for the compiler, but this might be hacky...
 # TODO: Really requires a proper understanding of ABI differences in
 # standard libraries and across standards.
-enum_option(BUILD_CXX_STANDARD
+enum_option(CMAKE_CXX_STANDARD
   DOC "C++ Standard to compile against"
   VALUES 11 14 17
   CASE_INSENSITIVE
   )
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #-----------------------------------------------------------------------
 # Compiler features
@@ -161,21 +162,6 @@ add_library(ccf-features SHARED ccf.hpp ccf.cpp)
 target_compile_features(ccf-features PUBLIC ${CCF_REQUIRED_FEATURES})
 
 #-----------------------------------------------------------------------
-# And the equivalent with CXX_STANDARD
-add_library(ccf-standard SHARED ccf.hpp ccf.cpp)
-set_target_properties(ccf-standard
-  PROPERTIES
-   CXX_STANDARD ${BUILD_CXX_STANDARD}
-   CXX_STANDARD_REQUIRED TRUE
-   # NB if we *also* use COMPILE_FEATURES, then the newest out of
-   # BUILD_CXX_STANDARD and COMPILE_FEATURES takes precedence. For
-   # example, if BUILD_CXX_STANDARD is '11' but COMPILE_FEATURES contains
-   # a C++14 feature, then C++14 will be used.
-   COMPILE_FEATURES "${CCF_REQUIRED_FEATURES}"
-  )
-
-
-#-----------------------------------------------------------------------
 # Now the project program (equally, this could be a client program)
 add_executable(ccf-program ccf-program.cpp)
 
@@ -184,12 +170,22 @@ add_executable(ccf-program ccf-program.cpp)
 # In consequence, it's compiled with the appropriate flags!
 target_link_libraries(ccf-program ccf-features)
 
+
+#-----------------------------------------------------------------------
+# 'Forward compatibility' test case: A consuming target using a newer
+# standard should use that rather than the lower one of what's being
+# consumed
+add_executable(ccf14-program ccf-program.cpp)
+target_compile_features(ccf14-program PUBLIC cxx_binary_literals)
+target_link_libraries(ccf14-program ccf-features)
+
+
 #-----------------------------------------------------------------------
 # Install...
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake")
 
-install(TARGETS ccf-features ccf-standard ccf-program EXPORT ccf-exports DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+install(TARGETS ccf-features ccf-program EXPORT ccf-exports DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(FILES ccf.hpp DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 #-----------------------------------------------------------------------
