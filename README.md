@@ -24,8 +24,9 @@ $ cmake --build .
 # Noted issues
 ## Intel support
 Appears that there isn't support for compile features or header detection
-on the Intel compiler. Need to find out if an extension can be provided,
-or whether we have to wait for upstream CMake to support this.
+on the Intel compiler. Need to find out if an extension can be provided 
+(yes, it can, see below), or whether we have to wait for upstream CMake 
+to support this (no, but this is the ideal case, and should submit patch!).
 
 The list(s) of compile features can be set after a project call, and
 they will be recognized by targets using them as supported, e.g.
@@ -54,6 +55,12 @@ target_compile_features(myprogram PRIVATE cxx_auto_type)
 
 The critical setting is the `CMAKE_CXX_STANDARD_DEFAULT` variable. This is
 required for compilers that have the notion of setting the standard.
+
+Intel also has the issue (as with Non-Apple/BSD Clang) of Standard Library
+selection, though compile features should only refer to things the compiler
+can generate code for. Needs further investigation, e.g. to use CMake's
+compiler feature detection mechanism to check stdlib impl/version as
+part of feature checking. Or could use separate stdlib detection.
 
 ## Compiler vs Library Features
 Important to note the difference between *compiler* (syntax) features and
