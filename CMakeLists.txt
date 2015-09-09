@@ -262,15 +262,23 @@ check_cxx11_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
 check_cxx11_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
 check_cxx11_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
 check_cxx11_feature("cxx_random" HAS_CXX_RANDOM)
+check_cxx11_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD)
 
 #-----------------------------------------------------------------------
-# Compile this project's library using compile features
+# Compile this project's library from the sources...
 add_library(ccf-features SHARED ccf.hpp ccf.cpp)
 
 #... with the required compile features
 # PUBLIC means that clients of libccf will inherit the features of ccf
 # and hence be compiled with the appropriate flags
 target_compile_features(ccf-features PUBLIC ${CCF_REQUIRED_FEATURES})
+
+#... and the needed include paths
+target_include_directories(ccf-features
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/ccf>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
 
 #-----------------------------------------------------------------------
 # Now the project program (equally, this could be a client program)

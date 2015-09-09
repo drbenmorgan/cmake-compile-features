@@ -1,7 +1,8 @@
 #include <iostream>
+#include "ccf.hpp"
 
 int main(int argc, const char *argv[])
 {
-  std::cout << "basic-program" << std::endl;
+  ccf::message("ccf-program");
   return 0;
 }
