@@ -1,9 +1,9 @@
-#include "ccf.hpp"
+#include "ccf/ccf.hpp"
 #include <iostream>
 #include <sstream>
 #include <thread>
 #include <vector>
-#include "ccf_compiler_detection.hpp"
+#include "ccf/ccf_compiler_detection.hpp"
 
 namespace ccf {
 

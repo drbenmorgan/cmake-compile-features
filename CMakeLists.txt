@@ -121,6 +121,9 @@ endif()
 # - Always verbose so we can see compile flags
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+# - For symbol visibility
+include(GenerateExportHeader)
+
 # - Enumerated option to allow C++ Standard selection
 include(cmake/EnumeratedOption.cmake)
 
@@ -266,7 +269,7 @@ check_cxx11_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD)
 
 #-----------------------------------------------------------------------
 # Compile this project's library from the sources...
-add_library(ccf-features SHARED ccf.hpp ccf.cpp)
+add_library(ccf-features SHARED ccf/ccf.hpp ccf/ccf.cpp)
 
 #... with the required compile features
 # PUBLIC means that clients of libccf will inherit the features of ccf
@@ -276,8 +279,15 @@ target_compile_features(ccf-features PUBLIC ${CCF_REQUIRED_FEATURES})
 #... and the needed include paths
 target_include_directories(ccf-features
   PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/ccf>
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+# - and an export header
+generate_export_header(ccf-features
+  BASE_NAME ccf
+  EXPORT_FILE_NAME ccf/ccf_export.h
   )
 
 #-----------------------------------------------------------------------

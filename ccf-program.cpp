@@ -1,5 +1,5 @@
 #include <iostream>
-#include "ccf.hpp"
+#include "ccf/ccf.hpp"
 
 int main(int argc, const char *argv[])
 {

@@ -3,8 +3,10 @@
 
 #include <string>
 
+#include "ccf/ccf_export.h"
+
 namespace ccf {
-void message(const std::string& m);
+void CCF_EXPORT message(const std::string& m);
 } // namespace ccf
 
 #endif // CCF_HH
