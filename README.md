@@ -2,9 +2,10 @@
 Study of CMake compile features
 
 # Requirements
-- CMake 3.2 or better
+- CMake 3.3 or better
   - Needed to support latest AppleClang, MSVC.
-  - Note that Intel support is lacking at the moment (see below)
+   - MSVC2015 needs 3.3 otherwise constexpr support is lacking
+   - Intel features included by project, not yet in CMake.
 - GNU, Clang, Xcode (AppleClang) or MSVC compilers
 - Suitable buildtool (ideally command line, so output/flags can be seen)
 
@@ -24,8 +25,8 @@ $ cmake --build .
 # Noted issues
 ## Intel support
 Appears that there isn't support for compile features or header detection
-on the Intel compiler. Need to find out if an extension can be provided 
-(yes, it can, see below), or whether we have to wait for upstream CMake 
+on the Intel compiler. Need to find out if an extension can be provided
+(yes, it can, see below), or whether we have to wait for upstream CMake
 to support this (no, but this is the ideal case, and should submit patch!).
 
 The list(s) of compile features can be set after a project call, and
