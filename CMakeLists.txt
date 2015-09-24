@@ -315,7 +315,12 @@ include(GNUInstallDirs)
 set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake")
 
 install(TARGETS ccf-features ccf-program EXPORT ccf-exports DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-install(FILES ccf.hpp DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES
+  ccf/ccf.hpp
+  "${CMAKE_CURRENT_BINARY_DIR}/ccf/ccf_compiler_detection.hpp"
+  "${CMAKE_CURRENT_BINARY_DIR}/ccf/ccf_export.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ccf"
+  )
 
 #-----------------------------------------------------------------------
 # Support files
