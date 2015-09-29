@@ -3,7 +3,7 @@
 # Want to support gcc 4.9, Clang 3.5/6, Intel 15 and VS2015
 # NB: Still to be investigated how to support compile features for
 # compiler where CMake does not yet provide a '-FeatureTests' file.
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.3)
 project(cmake-compile-features)
 
 #-----------------------------------------------------------------------
