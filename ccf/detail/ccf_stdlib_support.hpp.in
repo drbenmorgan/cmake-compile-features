@@ -1,0 +1,27 @@
+#ifndef CCF_STDCXX_SUPPORT_HH
+#define CCF_STDCXX_SUPPORT_HH
+//! Provide support for useful features of a future standard that
+//! the current may not supply. Use case here is std:make_unique
+
+#include <memory>
+
+// - Export configuration detation variable(s)
+#cmakedefine HAS_CXX_MEMORY_MAKE_UNIQUE
+
+//!make_unique implementation - namespace needs thought...
+//can put directly in std:: ns, but could also use a symbol instead?
+//However, almost certainly needs to be an implementation detail of
+//the project so that it will not clash with any changes in compiler/std
+//by clients.
+#ifndef HAS_CXX_MEMORY_MAKE_UNIQUE
+namespace std {
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+} // namespace std
+#endif
+
+#endif // CCF_STDCXX_SUPPORT_HH
+

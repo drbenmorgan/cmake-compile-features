@@ -3,20 +3,18 @@
 #include <sstream>
 #include <thread>
 #include <vector>
-#include "ccf/ccf_compiler_detection.hpp"
+#include "ccf/detail/ccf_compiler_support.hpp"
+#include "ccf/detail/ccf_stdlib_support.hpp"
 
 namespace ccf {
-
 /// check that a TLS variable can be defined using the generated macro
 /// that should expand to the appropriate keyword for this.
 CCF_THREAD_LOCAL int myTLS(0);
-
 
 void increaseValue(const std::string& id, int increment, int& res) {
   ccf::myTLS += increment;
   res = ccf::myTLS;
 }
-
 
 void dispatchThreads() {
   std::vector<int> results = {0,0,0,0,0};
@@ -37,14 +35,29 @@ void dispatchThreads() {
   }
 }
 
+//! Placeholder example object
+struct MyStruct {
+  MyStruct() {
+    std::cout << "constructing[" << this << "]" << std::endl;
+  }
+
+  ~MyStruct() {
+    std::cout << "destructing[" << this << "]" << std::endl;
+  }
+};
+
+//! Test that make_unique works - we should be using the workaround
+void useUniquePtr() {
+  //show that the workaround, well, works
+  auto myUniq = std::make_unique<MyStruct>();
+}
 
 void message(const std::string& m) {
   std::cout << m << std::endl;
   dispatchThreads();
   std::cout << "dispatching complete" << std::endl;
+  std::cout << "testing make_unique" << std::endl;
+  useUniquePtr();
 }
-
-
-
 } // namespace ccf
 

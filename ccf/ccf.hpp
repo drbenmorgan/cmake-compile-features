@@ -3,6 +3,7 @@
 
 #include <string>
 
+// Include the export header, this handles the symbol visibility for us
 #include "ccf/ccf_export.h"
 
 namespace ccf {

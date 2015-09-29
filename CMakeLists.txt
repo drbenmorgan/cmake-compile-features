@@ -79,8 +79,8 @@ foreach(_f ${CMAKE_CXX14_COMPILE_FEATURES})
   message("  ${_f}")
 endforeach()
 #-----------------------------------------------------------------------
-# Based on Ivana's document, list absolute required features
-# These are CMake compile features
+# Based on Ivana's document, list absolute required features, i.e. we
+# use in code and do not/cannot provided workarounds for
 set(CCF_REQUIRED_FEATURES
   cxx_auto_type
   cxx_range_for
@@ -108,13 +108,15 @@ set(CCF_REQUIRED_FEATURES
 # - Can also write a compiler detection header. This is useful
 # for providing workarounds such as for the thread_local case above
 # Only issue here is that it doesn't at support Intel yet...
-# Note that this project doesn't use the header, it's purely here
-# to show how it's generated.
+# Simply use it as an example of providing a workaround for thread_local
+# See also:
+#  https://cmake.org/cmake/help/v3.2/module/WriteCompilerDetectionHeader.html
+#
 include(WriteCompilerDetectionHeader)
 write_compiler_detection_header(
   # Public, detail or private header? Probably private unless CCF
   # exposes types in other public interfaces
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/ccf/ccf_compiler_detection.hpp"
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/ccf/detail/ccf_compiler_support.hpp"
   PREFIX CCF
   COMPILERS GNU Clang AppleClang MSVC
   # Separate headers on a per compiler basis for clarity
@@ -160,6 +162,14 @@ check_cxx11_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
 check_cxx11_feature("cxx_random" HAS_CXX_RANDOM)
 check_cxx11_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD)
 
+# - configure our custom header to supply implementation workarounds
+# based on the above values. However, note that this effectively hardcodes
+# for one stdlib implementation, so the header *probably* should not
+# be installed.
+configure_file(ccf/detail/ccf_stdlib_support.hpp.in
+  ccf/detail/ccf_stdlib_support.hpp
+  )
+
 #-----------------------------------------------------------------------
 # Compile this project's library from the sources...
 add_library(ccf-features SHARED ccf/ccf.hpp ccf/ccf.cpp)
@@ -187,20 +197,19 @@ generate_export_header(ccf-features
 # Now the project program (equally, this could be a client program)
 add_executable(ccf-program ccf-program.cpp)
 
-#... and link it to the library. Even though we haven't see compile_features
+#... and link it to the library. Even though we haven't set compile_features
 # for the program, it "inherits" the PUBLIC ones from the target.
 # In consequence, it's compiled with the appropriate flags!
 target_link_libraries(ccf-program ccf-features)
 
-
 #-----------------------------------------------------------------------
-# 'Forward compatibility' test case: A consuming target using a newer
+# 'Backward compatibility' test case: A consuming target using a newer
 # standard should use that rather than the lower one of what's being
-# consumed
-#add_executable(ccf14-program ccf-program.cpp)
-#target_compile_features(ccf1dd4-program PUBLIC cxx_binary_literals)
-#target_link_libraries(ccf14-program ccf-features)
-
+# consumed. This *ignores* any potential ABI differences between standard
+# libraries of two different standards...
+add_executable(ccf14-program ccf-program.cpp)
+target_compile_features(ccf14-program PUBLIC cxx_binary_literals)
+target_link_libraries(ccf14-program ccf-features)
 
 #-----------------------------------------------------------------------
 # Install...
@@ -210,9 +219,12 @@ set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake")
 install(TARGETS ccf-features ccf-program EXPORT ccf-exports DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(FILES
   ccf/ccf.hpp
-  "${CMAKE_CURRENT_BINARY_DIR}/ccf/ccf_compiler_detection.hpp"
   "${CMAKE_CURRENT_BINARY_DIR}/ccf/ccf_export.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ccf"
+  )
+install(DIRECTORY
+  "${CMAKE_CURRENT_BINARY_DIR}/ccf/detail"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ccf/"
   )
 
 #-----------------------------------------------------------------------
@@ -238,6 +250,7 @@ write_basic_package_version_file(
   COMPATIBILITY SameMajorVersion
   )
 
+#-----------------------------------------------------------------------
 # - Build tree config file(s)
 set(INSTALL_INCDIR "${PROJECT_SOURCE_DIR}")
 
@@ -250,6 +263,7 @@ configure_package_config_file(cmake/ccf-config.cmake.in
 
 export(EXPORT ccf-exports NAMESPACE "ccf::" FILE "${PROJECT_BINARY_DIR}/ccf-exports.cmake")
 
+#-----------------------------------------------------------------------
 # - Install Tree config files
 set(INSTALL_INCDIR "${CMAKE_INSTALL_INCLUDEDIR}")
 
