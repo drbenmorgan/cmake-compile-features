@@ -12,8 +12,8 @@ Study of CMake compile features
 # Example build on Unix
 ```
 $ ls
-CMakeLists.txt    LICENSE           README.md         basic-program.cpp
-$ mkdir build
+CMakeLists.txt  README.md       ccf-program.cpp
+LICENSE         ccf             cmake
 $ cd build
 $ cmake ..
 ... output should report info about compiler, C++ features known to
@@ -91,10 +91,29 @@ the tests transparent across newer standards.
 Apple's Clang that comes with Xcode doesn't support this at present.
 There's [a discussion on StackOverflow}(http://stackoverflow.com/questions/28094794/why-does-apple-clang-disallow-c11-thread-local-when-official-clang-supports). An upstream issue with Apple, so have to await their implementation of this. Not yet clear if this affects libc++ concurrency support.
 
-It's possible to provide workarounds here via the compiler detection
-header part of CMake (see the `ccf_compiler_detection_header.hpp` file
-created in the build directory).
+It's possible to provide workarounds here via the [compiler detection
+header part of CMake](https://cmake.org/cmake/help/v3.3/module/WriteCompilerDetectionHeader.html) (see the `ccf/detail/ccf_compiler_support.hpp` header
+under the build directory). This is also the general mechanism for
+providing workarounds for syntax where it's possible
 
+## C++ Standard Library Workarounds
+Illustrated by the `std::make_unique` case, where a useful bit of functionality
+didn't quite make it into a given standard (C++11) but can be implemented in
+that standard. The CMake script has the functionality to test for the presence
+and working of something in the Standard Library implementation in use, and
+sets boolean (CMake) variables to indicate its presence or otherwise.
+Here, we export this variable using `configure_file` to set a `#cmakedefine`
+symbol in a header. That symbol then protects a local implementation of that
+feature.
+
+In this project, the exemplar `std::make_unique` is shown so that:
+
+- C++11 systems can use `std::make_unique`
+- C++14 systems that don't provide a `std::make_unique` implementation can use it
+- There won't be a clash if the Standard Library provides an implementation
+
+See the template file [`ccf/detail/ccf_stdlib_support.hpp.in`](ccf/detail/ccf_stdlib_support.hpp.in) in the source directory, plus the generated header
+`ccf/detail/ccf_stdlib_support.hpp` in the build directory.
 
 ## Compiling against newer C++ Standards (14, 17, ...)
 The use case here is consuming projects that require use of a newer
