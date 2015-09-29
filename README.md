@@ -22,6 +22,77 @@ $ cmake --build .
 ... Compilation commands should contain correct "-std=c++XY" line
 ```
 
+# Comments
+## Checking for C++ Support
+Important to note the difference between *compiler* (syntax) features and
+*standard library* (implementation) features. CMake's compile features
+functionality deals with the former, e.g. the compiler understands the
+`auto` keyword. At link time the program is linked to the actual C++
+Standard Library implementation which may be different from any supplied
+by the compiler vendor. For example, the Intel compiler may link to
+the GNU implementation of the Standard Library, Clang may link to the
+GNU or LLVM implementations.
+
+Standard Library features are actual objects/functions such as
+
+- Smart pointers
+- Hashed containers
+- Random numbers
+- Concurrency
+
+Checks for these are implemented using a wrapper around CMake's
+`try_compile` functionality, with success/failure being recorded in a
+CMake variable. That can subsequently be used to fail the configuration
+or provide workarounds as required. Implementation may still need some
+work to both fully exercise requirements on the objects and to make
+the tests transparent across newer standards.
+
+This `try_compile` method could also perform syntax checks if required.
+However, it does not handle automatically adding any needed compiler flags
+nor propgating requirements to clients.
+
+## Forwarding C++ Support
+If we are building a library which is compiled with a given C++ standard,
+then clients linking to this library should (mostly) compile their code
+against the same (or compatible) standard. If CMake is used, then compile
+features help to transitively pass down the requirements. For example
+
+```cmake
+add_library(foo foo.hpp foo.cpp)
+target_compile_features(foo PUBLIC cxx_constexpr)
+# Effectively results in "g++ -std+c++11 foo.cpp"
+...
+
+add_executable(bar bar.cpp)
+target_link_libraries(bar foo)
+# Linking transitevely propgates compile features, so effectively
+# results in "g++ -std=c++11 bar.cpp -lfoo"
+```
+
+Compile features therefore propagate over CMake targets, including
+via exported targets (which create imported targets that clients
+actually link against).
+
+## C++ Standard Library Workarounds
+Illustrated by the `std::make_unique` case, where a useful bit of functionality
+didn't quite make it into a given standard (C++11) but can be implemented in
+that standard. The CMake script has the functionality to test for the presence
+and working of something in the Standard Library implementation in use, and
+sets boolean (CMake) variables to indicate its presence or otherwise.
+Here, we export this variable using `configure_file` to set a `#cmakedefine`
+symbol in a header. That symbol then protects a local implementation of that
+feature.
+
+In this project, the exemplar `std::make_unique` is shown so that:
+
+- C++11 systems can use `std::make_unique`
+- C++14 systems that don't provide a `std::make_unique` implementation can use it
+- There won't be a clash if the Standard Library provides an implementation
+
+See the template file [`ccf/detail/ccf_stdlib_support.hpp.in`](ccf/detail/ccf_stdlib_support.hpp.in) in the source directory, plus the generated header
+`ccf/detail/ccf_stdlib_support.hpp` in the build directory.
+
+
 # Noted issues
 ## Intel support
 Appears that there isn't support for compile features or header detection
@@ -63,29 +134,6 @@ can generate code for. Needs further investigation, e.g. to use CMake's
 compiler feature detection mechanism to check stdlib impl/version as
 part of feature checking. Or could use separate stdlib detection.
 
-## Compiler vs Library Features
-Important to note the difference between *compiler* (syntax) features and
-*standard library* (implementation) features. CMake's compile features
-functionality deals with the former, e.g. the compiler understands the
-`auto` keyword. At link time the program is linked to the actual C++
-Standard Library implementation which may be different from any supplied
-by the compiler vendor. For example, the Intel compiler may link to
-the GNU implementation of the Standard Library, Clang may link to the
-GNU or LLVM implementations.
-
-Standard Library features are actual objects/functions such as
-
-- Smart pointers
-- Hashed containers
-- Random numbers
-- Concurrency
-
-Checks for these are implemented using a wrapper around CMake's
-`try_compile` functionality, with success/failure being recorded in a
-CMake variable. That can subsequently be used to fail the configuration
-or provide workarounds as required. Implementation may still need some
-work to both fully exercise requirements on the objects and to make
-the tests transparent across newer standards.
 
 ## `thread_local` in Xcode (AppleClang)
 Apple's Clang that comes with Xcode doesn't support this at present.
@@ -95,25 +143,6 @@ It's possible to provide workarounds here via the [compiler detection
 header part of CMake](https://cmake.org/cmake/help/v3.3/module/WriteCompilerDetectionHeader.html) (see the `ccf/detail/ccf_compiler_support.hpp` header
 under the build directory). This is also the general mechanism for
 providing workarounds for syntax where it's possible
-
-## C++ Standard Library Workarounds
-Illustrated by the `std::make_unique` case, where a useful bit of functionality
-didn't quite make it into a given standard (C++11) but can be implemented in
-that standard. The CMake script has the functionality to test for the presence
-and working of something in the Standard Library implementation in use, and
-sets boolean (CMake) variables to indicate its presence or otherwise.
-Here, we export this variable using `configure_file` to set a `#cmakedefine`
-symbol in a header. That symbol then protects a local implementation of that
-feature.
-
-In this project, the exemplar `std::make_unique` is shown so that:
-
-- C++11 systems can use `std::make_unique`
-- C++14 systems that don't provide a `std::make_unique` implementation can use it
-- There won't be a clash if the Standard Library provides an implementation
-
-See the template file [`ccf/detail/ccf_stdlib_support.hpp.in`](ccf/detail/ccf_stdlib_support.hpp.in) in the source directory, plus the generated header
-`ccf/detail/ccf_stdlib_support.hpp` in the build directory.
 
 ## Compiling against newer C++ Standards (14, 17, ...)
 The use case here is consuming projects that require use of a newer
