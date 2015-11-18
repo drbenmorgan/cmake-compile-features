@@ -14,7 +14,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   set(CMAKE_CXX98_STANDARD_COMPILE_OPTION "-std=c++98")
   set(CMAKE_CXX98_EXTENSION_COMPILE_OPTION "-std=gnu++98")
 
-  if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0)
+  if(NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0))
     set(CMAKE_CXX11_STANDARD_COMPILE_OPTION "-std=c++11")
     set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "-std=gnu++11")
 
@@ -27,7 +27,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   # way as CMake does (using compile time checks on compiler version
   # etc - may also allow checks on GCC version in use), but for now
   # *assume* that the underlying library will support.
-  if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0)
+  if(NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0))
     set(CMAKE_CXX14_COMPILE_FEATURES
       cxx_contextual_conversions
       cxx_generic_lambdas
@@ -35,7 +35,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
       cxx_attribute_deprecated
       cxx_digit_separators
       )
-  elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0)
+  endif()
+
+  if(NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0))
     set(CMAKE_CXX14_COMPILE_FEATURES
       ${CMAKE_CXX14_COMPILE_FEATURES}
       cxx_binary_literals
@@ -98,10 +100,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
         cxx_thread_local # Linux/OSX only
         )
     endif()
-  else()
-    # always available?
-    set(CMAKE_CXX98_COMPILE_FEATURES cxx_template_template_parameters)
   endif()
+  
+  # always available?
+  set(CMAKE_CXX98_COMPILE_FEATURES cxx_template_template_parameters)
 
   set(CMAKE_CXX_COMPILE_FEATURES
     ${CMAKE_CXX98_COMPILE_FEATURES}
