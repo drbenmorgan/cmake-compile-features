@@ -1,0 +1,9 @@
+trigger:
+    - master
+
+jobs:
+- job: Windows
+  pool:
+    vmImage: 'windows-latest'
+  steps:
+  - task: CMake@1
