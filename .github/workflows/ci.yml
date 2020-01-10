@@ -13,7 +13,5 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Run a multi-line script
-      run: |
-        cmake --version
-        cmake .
+    - name: configure
+      uses: lukka/run-cmake@v0.5
