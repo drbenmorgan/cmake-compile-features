@@ -4,17 +4,16 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
-    
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    
     steps:
     - uses: actions/checkout@v1
-    - name: cmake
+    - name: Report environment
+      run: env | sort
+    - name: Run CMake
       uses: lukka/run-cmake@v0.5
       with:
         buildWithCMake: false
