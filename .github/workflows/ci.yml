@@ -41,5 +41,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: Docker Exec Test
         run: |
-          docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh && gcc --version'
-          docker exec builder bash -c 'ls -larth .'
+          docker exec builder bash -c 'mkdir build'
+          docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh && cd build && cmake .. && cmake --build .'
+          
