@@ -34,24 +34,13 @@ jobs:
           echo  "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
           sudo service autofs restart
           sudo cvmfs_config probe
-      - name: Load LCG
+      - name: Pull Docker Imake
+        run: docker pull centos:7
+      - name: Create Docker Container
+        run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace centos:7
+      - name: Are we running?
         run: |
-          . /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-ubuntu1804-gcc8-opt/setup.sh
-          env | sort
-      - name: Check LCG env
-        run: env | sort
-      - name: Try running centos7 container
-        uses: docker://centos:7
-        with:
-          entrypoint: /bin/ls
-          args: /etc
-  cvmfs-docker:
-    runs-on: [ubuntu-latest]
-    container:
-      image: hepsw/cvmfs-base-cc7
-      options: --privileged
-    steps:
-      - name: Where am I?
-        run: |
-          ls -larth /cvmfs/sft.cern.ch
-          . /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh
+          docker images
+          docker ps
+      - name: Docker Exec Test
+        run: docker exec builder bash -c 'ls -larth'
