@@ -48,8 +48,8 @@ jobs:
   cvmfs-docker:
     runs-on: [ubuntu-latest]
     container:
-      image: centos:7
+      image: hepsw/cvmfs-base-cc7
       options: --privileged
     steps:
       - name: Where am I?
-        run: ls -larth /etc
+        run: ls -larth /cvmfs/sft.cern.sh
