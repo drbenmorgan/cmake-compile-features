@@ -38,10 +38,8 @@ jobs:
         run: docker pull centos:7
       - name: Create Docker Container
         run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace centos:7
-      - name: Are we running?
-        run: |
-          docker images
-          docker ps
+      - uses: actions/checkout@v2
       - name: Docker Exec Test
-        run: 
+        run: |
           docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh && gcc --version'
+          docker exec builder bash -c 'ls -larth .'
