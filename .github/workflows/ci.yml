@@ -40,4 +40,9 @@ jobs:
           env | sort
       - name: Check LCG env
         run: env | sort
+      - name: Try running centos7 container
+        uses: docker://centos:7
+        with:
+          entrypoint: /bin/ls
+          args: /etc
         
