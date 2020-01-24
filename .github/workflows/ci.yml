@@ -3,24 +3,11 @@ name: CI
 on: [push]
 
 jobs:
-  #simple-build:
-  #  runs-on: ${{ matrix.os }}
-  #  strategy:
-  #    fail-fast: false
-  #    matrix:
-  #      os: [ubuntu-latest, macos-latest, windows-latest]
-  #  steps:
-  #  - uses: actions/checkout@v1
-  #  - name: Report environment
-  #    run: env | sort
-  #  - name: Run CMake
-  #    uses: lukka/run-cmake@v0.5
-  #    with:
-  #      buildWithCMake: false
-  
-  cvmfs-native:
+  cvmfs-centos7:
+    # Run on GitHub Hosted Linux so we have Docker
     runs-on: [ubuntu-latest]
     steps:
+      # Install and start CVMFS, possible place for action-ization ('setup-cvmfs') 
       - name: Start CVMFS
         run: | 
           sudo apt-get install lsb-release
@@ -34,11 +21,14 @@ jobs:
           echo  "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
           sudo service autofs restart
           sudo cvmfs_config probe
+      # Like Azure, if we have to run steps mixed between VM and Container, Container must be manually managed
       - name: Pull Docker Imake
         run: docker pull benmorgan/lcg-builder
       - name: Create Docker Container
         run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace benmorgan/lcg-builder
+      # Now the actual build...
       - uses: actions/checkout@v2
+      # Again, a possible place for action-ization or use of variables
       - name: Docker Exec Test
         run: |
           docker exec builder bash -c 'ls -larth && whoami'
