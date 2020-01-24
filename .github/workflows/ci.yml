@@ -44,5 +44,4 @@ jobs:
           docker ps
       - name: Docker Exec Test
         run: 
-          docker exec builder bash -c 'ls -larth /cvmfs/sft.cern.ch/'
-          docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh'
+          docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh && gcc --version'
