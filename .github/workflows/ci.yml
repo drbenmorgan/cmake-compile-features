@@ -18,7 +18,7 @@ jobs:
   #    with:
   #      buildWithCMake: false
   
-  cvmfs-build:
+  cvmfs-native:
     runs-on: [ubuntu-latest]
     steps:
       - name: Start CVMFS
@@ -45,4 +45,11 @@ jobs:
         with:
           entrypoint: /bin/ls
           args: /etc
-        
+  cvmfs-docker:
+    runs-on: [ubuntu-latest]
+    container:
+      image: centos:7
+      options: --privileged
+    steps:
+      - name: Where am I?
+        run: ls -larth /etc
