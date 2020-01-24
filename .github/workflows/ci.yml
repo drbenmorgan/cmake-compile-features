@@ -3,20 +3,20 @@ name: CI
 on: [push]
 
 jobs:
-  simple-build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    steps:
-    - uses: actions/checkout@v1
-    - name: Report environment
-      run: env | sort
-    - name: Run CMake
-      uses: lukka/run-cmake@v0.5
-      with:
-        buildWithCMake: false
+  #simple-build:
+  #  runs-on: ${{ matrix.os }}
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      os: [ubuntu-latest, macos-latest, windows-latest]
+  #  steps:
+  #  - uses: actions/checkout@v1
+  #  - name: Report environment
+  #    run: env | sort
+  #  - name: Run CMake
+  #    uses: lukka/run-cmake@v0.5
+  #    with:
+  #      buildWithCMake: false
   
   cvmfs-build:
     runs-on: [ubuntu-latest]
@@ -36,7 +36,7 @@ jobs:
           sudo cvmfs_config probe
       - name: Load LCG
         run: |
-          . /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-ubuntu1804-gcc8-opt/
+          . /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-ubuntu1804-gcc8-opt/setup.sh
           env | sort
       - name: Check LCG env
         run: env | sort
