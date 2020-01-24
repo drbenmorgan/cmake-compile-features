@@ -35,9 +35,9 @@ jobs:
           sudo service autofs restart
           sudo cvmfs_config probe
       - name: Pull Docker Imake
-        run: docker pull centos:7
+        run: docker pull gitlab-registry.cern.ch/sft/docker:cc7
       - name: Create Docker Container
-        run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace centos:7
+        run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace gitlab-registry.cern.ch/sft/docker:cc7
       - uses: actions/checkout@v2
       - name: Docker Exec Test
         run: |
