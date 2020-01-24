@@ -35,9 +35,9 @@ jobs:
           sudo service autofs restart
           sudo cvmfs_config probe
       - name: Pull Docker Imake
-        run: docker pull gitlab-registry.cern.ch/sft/docker:lcg-cc7
+        run: docker pull benmorgan/lcg-builder
       - name: Create Docker Container
-        run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace gitlab-registry.cern.ch/sft/docker:lcg-cc7
+        run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace benmorgan/lcg-builder
       - uses: actions/checkout@v2
       - name: Docker Exec Test
         run: |
