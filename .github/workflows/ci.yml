@@ -35,7 +35,27 @@ jobs:
           docker exec builder bash -c 'mkdir build'
           docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh && cd build && cmake .. && cmake --build .'
         
-  ubuntu-1804:
+  ubuntu-1804-gcc7:
+    strategy:
+      fail-fast: true
+      matrix:
+        compiler: [[gcc-7,g++-7], [gcc-8,g++-8], [gcc-9,g++-9]]
+    runs-on: [ubuntu-18.04]
+    env:
+      CC: /usr/bin/{{ matrix.compiler[0] }}
+      CXX: /usr/bin/{{ matrix.compiler[1] }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake ..
+      - name: Build
+        run: |
+          cd build
+          cmake --build .
+          
+  ubuntu-1804-gcc8:
     runs-on: [ubuntu-18.04]
     steps:
       - uses: actions/checkout@v2
