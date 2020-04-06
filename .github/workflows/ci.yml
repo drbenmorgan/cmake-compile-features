@@ -34,4 +34,16 @@ jobs:
           docker exec builder bash -c 'ls -larth && whoami'
           docker exec builder bash -c 'mkdir build'
           docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh && cd build && cmake .. && cmake --build .'
-          
+        
+  macOS-Catalina:
+    runs-on: [macos-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake ..
+      - name: Build
+        run: |
+          cd build
+          cmake --build .    
