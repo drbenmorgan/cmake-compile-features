@@ -46,4 +46,17 @@ jobs:
       - name: Build
         run: |
           cd build
-          cmake --build .    
+          cmake --build .
+          
+  windows-2019:
+    runs-on: [windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake ..
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --config RelWithDebInfo
