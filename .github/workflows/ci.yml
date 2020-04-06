@@ -37,7 +37,6 @@ jobs:
         
   ubuntu-1804:
     strategy:
-      fail-fast: true
       matrix:
         compiler: 
         - {cc: gcc-7, cxx: g++-7}
