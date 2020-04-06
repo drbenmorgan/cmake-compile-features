@@ -39,11 +39,14 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        compiler: [[gcc-7,g++-7], [gcc-8,g++-8], [gcc-9,g++-9]]
+        compiler: 
+        - {cc: gcc-7, cxx: g++-7}
+        - {cc: gcc-8, cxx: g++-8}
+        - {cc: gcc-9, cxx: g++-9}
     runs-on: [ubuntu-18.04]
     env:
-      CC: /usr/bin/{{ matrix.compiler[0] }}
-      CXX: /usr/bin/{{ matrix.compiler[1] }}
+      CC: /usr/bin/${{ matrix.compiler.cc }}
+      CXX: /usr/bin/${{ matrix.compiler.cxx }}
     steps:
       - uses: actions/checkout@v2
       - name: Configure
