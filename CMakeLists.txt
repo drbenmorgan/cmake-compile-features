@@ -1,14 +1,9 @@
 # Project to demo CMake compile features for C++ standard
-
-# Want to support gcc 4.9, Clang 3.5/6, Intel 15 and VS2015
-# NB: Still to be investigated how to support compile features for
-# compiler where CMake does not yet provide a '-FeatureTests' file.
+# Only covers GNU, {Apple}Clang and MSVC so far
 cmake_minimum_required(VERSION 3.8)
 project(cmake-compile-features)
 
-#-----------------------------------------------------------------------
-# Custom Intel compile features
-include(cmake/IntelCompileFeatures.cmake)
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
 
 #-----------------------------------------------------------------------
 # Basic setup
@@ -29,14 +24,14 @@ include(cmake/CheckCXXStandardLibrary.cmake)
 # Compiler Info
 # - Print, for info, detected Compiler and Version
 message(STATUS "CXX compiler ID         : '${CMAKE_CXX_COMPILER_ID}'")
-message(STATUS "CXX compiler Simulate ID: '${CMAKE_CXX_SIMULATE_ID}")
+message(STATUS "CXX compiler Simulate ID: '${CMAKE_CXX_SIMULATE_ID}'")
 message(STATUS "CXX compiler Version    : '${CMAKE_CXX_COMPILER_VERSION}'")
 
 #-----------------------------------------------------------------------
-# C++ Standard Selection - 11, 14 or 17, or 2a
-enum_option(BUILD_CXX_STANDARD
+# C++ Standard Selection - 17, 20, back support for 11, 14
+enum_option(CMAKE_CXX_STANDARD
   DOC "C++ Standard to compile against"
-  VALUES 11 14 17 20
+  VALUES 17 20 11 14
   CASE_INSENSITIVE
   )
 set(CCF_REQUIRED_FEATURES cxx_std_${BUILD_CXX_STANDARD})
@@ -45,18 +40,7 @@ set(CCF_REQUIRED_FEATURES cxx_std_${BUILD_CXX_STANDARD})
 # - Do NOT want vendor extensions (e.g. no --std=gnu++11)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# - Print list of C++ features that CMake *knows* about, i.e. can check
-# for. Does *not* mean compiler supports them
-# See also
-# http://www.cmake.org/cmake/help/v3.2/prop_gbl/CMAKE_CXX_KNOWN_FEATURES.html
-message(STATUS "List of CXX features known to CMake")
-get_property(_cxx_known_features GLOBAL PROPERTY CMAKE_CXX_KNOWN_FEATURES)
-foreach(_f ${_cxx_known_features})
-  message("  ${_f}")
-endforeach()
-
-# - whereas CMAKE_CXX<std>_COMPILE_FEATURES should list those the compiler
-#   actually supports
+# - Print list of C++ features that CMake *knows* compiler to support 
 foreach(_cxxstd 11 14 17 20)
   message(STATUS "List of supported CXX${_cxxstd} features:")
   foreach(_f ${CMAKE_CXX${_cxxstd}_COMPILE_FEATURES})
