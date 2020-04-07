@@ -34,6 +34,10 @@ jobs:
         run: |
           docker exec builder bash -c 'mkdir build'
           docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd build && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake .. && cmake --build .'
+      - name: Build CentOS/gcc8
+        run: |
+          docker exec builder bash -c 'mkdir build'
+          docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd build && cmake .. && cmake --build .'
         
   ubuntu-1804:
     strategy:
