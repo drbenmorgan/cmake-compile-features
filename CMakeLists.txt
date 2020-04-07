@@ -129,6 +129,9 @@ target_include_directories(ccf-features
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 
+# ... and any additional libraries
+target_link_libraries(ccf-features PUBLIC Threads::Threads)
+
 # - and an export header
 generate_export_header(ccf-features
   BASE_NAME ccf
