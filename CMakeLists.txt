@@ -28,7 +28,7 @@ message(STATUS "CXX compiler Simulate ID: '${CMAKE_CXX_SIMULATE_ID}'")
 message(STATUS "CXX compiler Version    : '${CMAKE_CXX_COMPILER_VERSION}'")
 
 #-----------------------------------------------------------------------
-# C++ Standard Selection - 17, 20, back support for 11, 14
+# C++ Standard Selection - 11, 14 or 17, or 2a
 enum_option(CMAKE_CXX_STANDARD
   DOC "C++ Standard to compile against"
   VALUES 17 20 11 14
@@ -40,7 +40,7 @@ set(CCF_REQUIRED_FEATURES cxx_std_${CMAKE_CXX_STANDARD})
 # - Do NOT want vendor extensions (e.g. no --std=gnu++11)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# - Print list of C++ features that CMake *knows* compiler to support 
+# - Print list of C++ features that CMake *knows* compiler to support
 foreach(_cxxstd 11 14 17 20)
   message(STATUS "List of supported CXX${_cxxstd} features:")
   foreach(_f ${CMAKE_CXX${_cxxstd}_COMPILE_FEATURES})
@@ -91,14 +91,14 @@ check_cxxstdlib_implementation()
 # Can always fail at configure stage based on truth of HAS_CXX_...
 # variables, or add these into the PROLOG/EPILOG entries of the compiler
 # detection header (e.g. to provide workarounds)
-check_cxx11_feature("cxx_memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
-check_cxx11_feature("cxx_memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
-check_cxx11_feature("cxx_memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
-check_cxx11_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
-check_cxx11_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
-check_cxx11_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
-check_cxx11_feature("cxx_random" HAS_CXX_RANDOM)
-check_cxx11_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD)
+check_cxx_feature("cxx_memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
+check_cxx_feature("cxx_memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
+check_cxx_feature("cxx_memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
+check_cxx_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
+check_cxx_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
+check_cxx_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
+check_cxx_feature("cxx_random" HAS_CXX_RANDOM)
+check_cxx_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD)
 
 # - configure our custom header to supply implementation workarounds
 # based on the above values. However, note that this effectively hardcodes

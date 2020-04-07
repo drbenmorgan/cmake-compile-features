@@ -57,45 +57,48 @@ endif()
 
 #-----------------------------------------------------------------------
 # Let's see if the compile options are set
-message(STATUS "CMAKE_CXX11_STANDARD_COMPILE_OPTION: ${CMAKE_CXX11_STANDARD_COMPILE_OPTION}")
-message(STATUS "CMAKE_CXX14_STANDARD_COMPILE_OPTION: ${CMAKE_CXX14_STANDARD_COMPILE_OPTION}")
+foreach(_cxxstd 11 14 17 20)
+  message(STATUS "CMAKE_CXX${_cxxstd}_STANDARD_COMPILE_OPTION: ${CMAKE_CXX${_cxxstd}_STANDARD_COMPILE_OPTION}")
+endforeach()
 
 set(__CHECKCXXFEATURE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 #-----------------------------------------------------------------------
-# Check that compiler support C++11 FEATURE_NAME, setting RESULT_VAR to
+# Check that compiler support C++ FEATURE_NAME, setting RESULT_VAR to
 # TRUE if feature is present
-function(check_cxx11_feature FEATURE_NAME RESULT_VAR)
-  # Factor out standard id
-  set(_CF_CXX_STANDARD 11)
+function(check_cxx_feature FEATURE_NAME RESULT_VAR)
+  # try_compile will respect CMAKE_CXX_STANDARD, so we need it to be set
+  if(NOT CMAKE_CXX_STANDARD)
+    message(FATAL_ERROR "check_cxx_feature requires CMAKE_CXX_STANDARD to be set")
+  endif()
 
   if(NOT DEFINED ${RESULT_VAR})
     set(_bindir "${CMAKE_BINARY_DIR}/CheckCXXFeature/${FEATURE_NAME}")
-    set(_SRCFILE_BASE ${__CHECKCXXFEATURE_DIR}/cxx${_CF_CXX_STANDARD}-test-${FEATURE_NAME})
+    set(_SRCFILE_BASE ${__CHECKCXXFEATURE_DIR}/cxx-test-${FEATURE_NAME})
     set(_LOG_NAME "\"${FEATURE_NAME}\"")
-    message(STATUS "Checking support for ${_LOG_NAME} in C++${_CF_CXX_STANDARD}")
+    message(STATUS "Checking support for ${_LOG_NAME} in C++${CMAKE_CXX_STANDARD}")
 
     set(_SRCFILE "${_SRCFILE_BASE}.cpp")
     set(_SRCFILE_FAIL "${_SRCFILE_BASE}_fail.cpp")
     set(_SRCFILE_FAIL_COMPILE "${_SRCFILE_BASE}_fail_compile.cpp")
 
     if(NOT EXISTS "${_SRCFILE}")
-      message(STATUS "Checking support for ${_LOG_NAME} in C++${_CF_CXX_STANDARD}: not supported (no test available)")
-      set(${RESULT_VAR} FALSE CACHE INTERNAL "support for ${_LOG_NAME} in C++${_CF_CXX_STANDARD}")
+      message(STATUS "Checking support for ${_LOG_NAME} in C++${CMAKE_CXX_STANDARD}: not supported (no test available)")
+      set(${RESULT_VAR} FALSE CACHE INTERNAL "support for ${_LOG_NAME} in C++${CMAKE_CXX_STANDARD}")
       return()
     endif()
 
     if(CMAKE_CROSSCOMPILING)
-      try_compile(${RESULT_VAR} "${_bindir}" "${_SRCFILE}"
-        COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
+      try_compile(${RESULT_VAR} "${_bindir}" "${_SRCFILE}")
+        #COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
       if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
-        try_compile(${RESULT_VAR} "${_bindir}_fail" "${_SRCFILE_FAIL}"
-          COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
+        try_compile(${RESULT_VAR} "${_bindir}_fail" "${_SRCFILE_FAIL}")
+          #COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
       endif()
     else()
       try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
-        "${_bindir}" "${_SRCFILE}"
-        COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
+        "${_bindir}" "${_SRCFILE}")
+        #COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
       if(_COMPILE_RESULT_VAR AND NOT _RUN_RESULT_VAR)
         set(${RESULT_VAR} TRUE)
       else()
@@ -104,8 +107,8 @@ function(check_cxx11_feature FEATURE_NAME RESULT_VAR)
 
       if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
         try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
-          "${_bindir}_fail" "${_SRCFILE_FAIL}"
-          COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
+          "${_bindir}_fail" "${_SRCFILE_FAIL}")
+          #COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
         if(_COMPILE_RESULT_VAR AND _RUN_RESULT_VAR)
           set(${RESULT_VAR} TRUE)
         else()
@@ -115,8 +118,8 @@ function(check_cxx11_feature FEATURE_NAME RESULT_VAR)
     endif()
 
     if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL_COMPILE})
-      try_compile(_TMP_RESULT "${_bindir}_fail_compile" "${_SRCFILE_FAIL_COMPILE}"
-        COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
+      try_compile(_TMP_RESULT "${_bindir}_fail_compile" "${_SRCFILE_FAIL_COMPILE}")
+        #COMPILE_DEFINITIONS "${CMAKE_CXX${_CF_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
       if(_TMP_RESULT)
         set(${RESULT_VAR} FALSE)
       else()
@@ -125,12 +128,12 @@ function(check_cxx11_feature FEATURE_NAME RESULT_VAR)
     endif()
 
     if(${RESULT_VAR})
-      message(STATUS "Checking support for ${_LOG_NAME} in C++${_CF_CXX_STANDARD}: works")
+      message(STATUS "Checking support for ${_LOG_NAME} in C++${CMAKE_CXX_STANDARD}: works")
     else()
-      message(STATUS "Checking support for ${_LOG_NAME} in C++${_CF_CXX_STANDARD}: not supported")
+      message(STATUS "Checking support for ${_LOG_NAME} in C++${CMAKE_CXX_STANDARD}: not supported")
     endif()
 
-    set(${RESULT_VAR} ${${RESULT_VAR}} CACHE INTERNAL "support for ${_LOG_NAME} in C++${_CF_CXX_STANDARD}")
+    set(${RESULT_VAR} ${${RESULT_VAR}} CACHE INTERNAL "support for ${_LOG_NAME} in C++${CMAKE_CXX_STANDARD}")
   endif()
 endfunction()
 
