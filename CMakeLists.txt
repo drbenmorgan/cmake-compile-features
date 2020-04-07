@@ -83,6 +83,10 @@ write_compiler_detection_header(
 # this info the the project config files
 check_cxxstdlib_implementation()
 
+# For multithreading, we may need the threads implementation
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 # Check lib features - these are things we need but for which CMake
 # provides no feature detection (i.e. are implementation details of
 # the Standard C++ library being used)
@@ -98,7 +102,7 @@ check_cxx_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
 check_cxx_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
 check_cxx_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
 check_cxx_feature("cxx_random" HAS_CXX_RANDOM)
-check_cxx_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD)
+check_cxx_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD LINK_LIBRARIES Threads::Threads)
 
 # - configure our custom header to supply implementation workarounds
 # based on the above values. However, note that this effectively hardcodes
