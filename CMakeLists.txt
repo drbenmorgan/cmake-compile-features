@@ -34,7 +34,7 @@ enum_option(CMAKE_CXX_STANDARD
   VALUES 17 20 11 14
   CASE_INSENSITIVE
   )
-set(CCF_REQUIRED_FEATURES cxx_std_${BUILD_CXX_STANDARD})
+set(CCF_REQUIRED_FEATURES cxx_std_${CMAKE_CXX_STANDARD})
 #-----------------------------------------------------------------------
 # Compiler features
 # - Do NOT want vendor extensions (e.g. no --std=gnu++11)
