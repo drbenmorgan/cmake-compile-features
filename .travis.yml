@@ -1,0 +1,16 @@
+language: cpp
+compiler: clang
+matrix:
+  include:
+    # macOS 10.14
+    - os: osx
+      osx_image: xcode11.3
+    # macOS 10.14
+    - os: osx
+      osx_image: xcode10.3
+    # macOS 10.13
+    - os: osx
+      osx_image: xcode10.1
+script:
+  - mkdir build && cd build
+  - cmake .. && make
