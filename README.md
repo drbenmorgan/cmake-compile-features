@@ -1,13 +1,11 @@
 # cmake-compile-features
-Study of CMake compile features
+Study of CMake compile features and compiler support levels for C++17, 20, ...
 
 # Requirements
-- CMake 3.3 or better
-  - Needed to support latest AppleClang, MSVC.
-   - MSVC2015 needs 3.3 otherwise constexpr support is lacking
-   - Intel features included by project, not yet in CMake.
-- GNU, Clang, Xcode (AppleClang) or MSVC compilers
-- Suitable buildtool (ideally command line, so output/flags can be seen)
+- GNU, Clang, Intel, or MSVC compiler
+- CMake 3.8 or better
+  - Needed to provide C++17 support and the `cxx_std_XY` features
+  - 3.12 is needed for `std_cxx_20` feature
 
 # Example build on Unix
 ```
@@ -22,7 +20,29 @@ $ cmake --build .
 ... Compilation commands should contain correct "-std=c++XY" line
 ```
 
-# Comments
+# Platforms tested by CI
+GitHub Actions and Travis CI are used to test the platforms:
+
+- GitHub
+  - CentOS7 (Docker Image)
+    - GCC 4.8.5 (native)
+    - GCC 8.X (LCG_96 from sft.cern.ch CVMFS)
+  - Ubuntu 18.04
+    - GCC 7, 8, 9
+    - Clang 6, 8, 9
+  - Windows Server 2019
+    - Visual Studio 2019
+  - macOS 10.15 (Catalina)
+    - Xcode 11.3.1
+- Travis CI
+  - macOS 10.14 (Mojave), Xcode 11.3.1
+  - macOS 10.14 (Mojave), Xcode 10.3
+  - macOS 10.13 (High Sierra), Xcode 10.1
+    
+For additional information, see the documentation for [GitHub Hosted Runners](https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners)    
+and [Travis CI macOS Build Environment](https://docs.travis-ci.com/user/reference/osx/).
+
+# Notes
 ## Checking for C++ Support
 Important to note the difference between *compiler* (syntax) features and
 *standard library* (implementation) features. CMake's compile features
@@ -47,26 +67,32 @@ or provide workarounds as required. Implementation may still need some
 work to both fully exercise requirements on the objects and to make
 the tests transparent across newer standards.
 
-This `try_compile` method could also perform syntax checks if required.
-However, it does not handle automatically adding any needed compiler flags
-nor propgating requirements to clients.
+This `try_compile` method can also perform syntax checks if required, which
+is the case for the simplified `cxx_std_XY` compile features. These only 
+indicate that the compiler knows about C++XY not that its support for the
+standard is feature-complete, nor that the standard library provides a
+complete implementation.
 
 ## Forwarding C++ Support
 If we are building a library which is compiled with a given C++ standard,
-then clients linking to this library should (mostly) compile their code
-against the same (or compatible) standard. If CMake is used, then compile
-features help to transitively pass down the requirements. For example
+then clients linking to this library should compile their code
+against the same standard. This is the safest and most conservative approach
+to avoid run/deploy time issues with potential ABI differences between different
+standards.
+
+If CMake is used, then compile features can help to transitively pass down the 
+requirement. For example
 
 ```cmake
 add_library(foo foo.hpp foo.cpp)
-target_compile_features(foo PUBLIC cxx_constexpr)
-# Effectively results in "g++ -std+c++11 foo.cpp"
+target_compile_features(foo PUBLIC cxx_std_11)
+# Effectively results in "g++ -std=gnu++11 foo.cpp"
 ...
 
 add_executable(bar bar.cpp)
-target_link_libraries(bar foo)
+target_link_libraries(bar PRIVATE foo)
 # Linking transitevely propgates compile features, so effectively
-# results in "g++ -std=c++11 bar.cpp -lfoo"
+# results in "g++ -std=gnu++11 bar.cpp -lfoo"
 ```
 
 Compile features therefore propagate over CMake targets, including
@@ -75,8 +101,8 @@ actually link against).
 
 ## C++ Standard Library Workarounds
 Illustrated by the `std::make_unique` case, where a useful bit of functionality
-didn't quite make it into a given standard (C++11) but can be implemented in
-that standard. The CMake script has the functionality to test for the presence
+didn't quite make it into a given standard (C++11) but can be implemented using the
+features of the older standard. The CMake script has the functionality to test for the presence
 and working of something in the Standard Library implementation in use, and
 sets boolean (CMake) variables to indicate its presence or otherwise.
 Here, we export this variable using `configure_file` to set a `#cmakedefine`
@@ -94,7 +120,64 @@ See the template file [`ccf/detail/ccf_stdlib_support.hpp.in`](ccf/detail/ccf_st
 
 
 # Noted issues
-## Intel support
+## Compiling against newer C++ Standards (14, 17, ...)
+The use case here is consuming projects that require use of a newer
+C++ standard than currently required by this project. For example,
+this project only uses features of C++11, but a consuming project
+uses features of C++14. It's an issue because the ABI of the
+Standard Library may be incompatible between objects compiled
+against different standards. This was highlighted by early adopters of
+C++11 making using of the experimental and unstable ABI in GCC4.
+
+Whilst C++'s ABI *should* stabilize in coming standard, allowances should
+be made for the same issue arising as C++17 is formalized. Forcing use
+of a particular standard can be done via setting the variables
+`CMAKE_CXX_STANDARD` and `CMAKE_CXX_STANDARD_REQUIRED` prior to
+target declaration. These are used to initialize the `CXX_STANDARD` property of targets, and this can co-exist with compile features as the
+newest standard required will be used. For example, a target with
+`CXX_STANDARD` set to '14' and only using C++11 compile features
+would result in the target's sources being compiled against C++14 (and vice versa).
+
+Unlike compile features however, the `CXX_STANDARD` property of targets
+is *not* exported for use by consuming targets. This means that
+consuming targets would only compile against the standard required by
+the compile features of the library, even if this standard is older
+than the one actually used to compile the library against. Consequently
+an ABI incompatibility would occur if all objects must have been
+compiled/linked with the same standard.
+
+There are several potential ways to resolve this. Whilst the `CXX_STANDARD`
+and `CXX_STANDARD_REQUIRED` target properties are not directly exported,
+it may be possible to set them manually on the imported targets created by
+the project's cmake config module. Initial tests suggest that this isn't
+passed down to consuming targets though, so would not be of great use.
+
+Another possibility is to use the `INTERFACE_COMPILE_OPTIONS` target property to 
+pass down any relevant flags to the compiler, but this requires some work with generator expressions to
+choose between compilers.
+
+The final option is to artifically add a single C++14 compile feature to the
+required list if the compiler support C++14. This would work, but the single
+option would need to be supported across all compilers.
+
+- Intel : `cxx_binary_literals` seems reasonable from 11-14, auto return types from 15
+- MSVC : auto/decltype(auto) return types or init captures from VS14, binary literals from VS15
+- GNU : binary literals from 4.9, auto return type from 4.8
+- Clang : binary literals from 2.9, decltype(auto) from 3.3, and 3.3 is minimum to be C++11 complete.
+
+So using the `cxx_decltype_auto` feature would probably be sufficient.
+
+# Legacy/Resolved Issues
+## `thread_local` in Xcode (AppleClang)
+Older (_which?_) versions of Apple's Clang that comes with Xcode did not support this.
+A discussion about this can be [found on StackOverflow](http://stackoverflow.com/questions/28094794/why-does-apple-clang-disallow-c11-thread-local-when-official-clang-supports). 
+Ultimately was an upstream issue with Apple, and eventually resolved.
+
+It's also an area where workarounds can be enabled/implemented via the [compiler detection
+header part of CMake](https://cmake.org/cmake/help/v3.3/module/WriteCompilerDetectionHeader.html) (see the `ccf/detail/ccf_compiler_support.hpp` header
+under the build directory). This is also the general mechanism for providing workarounds for syntax where it's possible.
+
+## Supporting newer compilers in older CMake (Intel was use case)
 Appears that there isn't support for compile features or header detection
 on the Intel compiler. Need to find out if an extension can be provided
 (yes, it can, see below), or whether we have to wait for upstream CMake
@@ -133,61 +216,3 @@ selection, though compile features should only refer to things the compiler
 can generate code for. Needs further investigation, e.g. to use CMake's
 compiler feature detection mechanism to check stdlib impl/version as
 part of feature checking. Or could use separate stdlib detection.
-
-
-## `thread_local` in Xcode (AppleClang)
-Apple's Clang that comes with Xcode doesn't support this at present.
-There's [a discussion on StackOverflow}(http://stackoverflow.com/questions/28094794/why-does-apple-clang-disallow-c11-thread-local-when-official-clang-supports). An upstream issue with Apple, so have to await their implementation of this. Not yet clear if this affects libc++ concurrency support.
-
-It's possible to provide workarounds here via the [compiler detection
-header part of CMake](https://cmake.org/cmake/help/v3.3/module/WriteCompilerDetectionHeader.html) (see the `ccf/detail/ccf_compiler_support.hpp` header
-under the build directory). This is also the general mechanism for
-providing workarounds for syntax where it's possible
-
-## Compiling against newer C++ Standards (14, 17, ...)
-The use case here is consuming projects that require use of a newer
-C++ standard than currently required by this project. For example,
-this project only uses features of C++11, but a consuming project
-uses features of C++14. It's an issue because the ABI of the
-Standard Library may be incompatible between objects compiled
-against different standards. This was highlighted by early adopters of
-C++11 making using of the experimental and unstable ABI in GCC4.
-
-Whilst C++'s ABI *should* stabilize in coming standard, allowances should
-be made for the same issue arising as C++17 is formalized. Forcing use
-of a particular standard can be done via setting the variables
-`CMAKE_CXX_STANDARD` and `CMAKE_CXX_STANDARD_REQUIRED` prior to
-target declaration. These are used to initialize the `CXX_STANDARD` property of targets, and this can co-exist with compile features as the
-newest standard required will be used. For example, a target with
-`CXX_STANDARD' set to '14' and only using C++11 compile features
-would result in the target's sources being compiled against C++14 (and vice versa).
-
-Unlike compile features however, the `CXX_STANDARD` property of targets
-is *not* exported for use by consuming targets. This means that
-consuming targets would only compile against the standard required by
-the compile features of the library, even if this standard is older
-than the one actually used to compile the library against. Consequently
-an ABI incompatibility would occur if all objects must have been
-compiled/linked with the same standard.
-
-There are several potential ways to resolve this. Whilst the `CXX_STANDARD`
-and `CXX_STANDARD_REQUIRED` target properties are not directly exported,
-it may be possible to set them manually on the imported targets created by
-the project's cmake config module. Initial tests suggest that this isn't
-passed down to consuming targets though, so would not be of great use.
-
-Another possibility is to use the `INTERFACE_COMPILE_OPTIONS` target property to pass down any relevant flags to the
-compiler, but this requires some work with generator expressions to
-choose between compilers.
-
-The final option is to artifically add a single C++14 compile feature to the
-required list if the compiler support C++14. This would work, but the single
-option would need to be supported across all compilers.
-
-- Intel : `cxx_binary_literals` seems reasonable from 11-14, auto return types from 15
-- MSVC : auto/decltype(auto) return types or init captures from VS14, binary literals from VS15
-- GNU : binary literals from 4.9, auto return type from 4.8
-- Clang : binary literals from 2.9, decltype(auto) from 3.3, and 3.3 is minimum to be C++11 complete.
-
-So using the `cxx_decltype_auto` feature would probably be sufficient.
-
