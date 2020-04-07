@@ -31,10 +31,12 @@ jobs:
       # Run each config in series just to check that things work
       # Also a little faster as we don't have to install CVMFS/start Docker for each one
       - name: Build CentOS/gcc4.8
+        if: always()
         run: |
           docker exec builder bash -c 'mkdir build'
           docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd build && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake .. && cmake --build .'
       - name: Build CentOS/gcc8
+        if: always()
         run: |
           docker exec builder bash -c 'mkdir build'
           docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd build && cmake .. && cmake --build .'
