@@ -1,6 +1,6 @@
 name: CI
 
-on: [push]
+on: [pull-request]
 
 jobs:
   cvmfs-centos7:
@@ -8,8 +8,10 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
       # Install and start CVMFS, possible place for action-ization ('setup-cvmfs') 
-      - name: Start CVMFS
-        run: | 
+      - name: Install and Start CVMFS
+        run: |
+          echo $PWD
+          ls -larth
           sudo apt-get install lsb-release
           wget https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb
           sudo dpkg -i cvmfs-release-latest_all.deb
@@ -22,7 +24,7 @@ jobs:
           sudo service autofs restart
           sudo cvmfs_config probe
       # Like Azure, if we have to run steps mixed between VM and Container, Container must be manually managed
-      - name: Pull Docker Imake
+      - name: Pull Docker Image
         run: docker pull benmorgan/lcg-builder
       - name: Create Docker Container
         run: docker run -itd --name builder -v $GITHUB_WORKSPACE:/workspace -v /cvmfs:/cvmfs -w /workspace benmorgan/lcg-builder
@@ -31,7 +33,6 @@ jobs:
       # Again, a possible place for action-ization or use of variables
       - name: Docker Exec Test
         run: |
-          docker exec builder bash -c 'ls -larth && whoami'
           docker exec builder bash -c 'mkdir build'
           docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96bpython3/x86_64-centos7-gcc8-opt/setup.sh && cd build && cmake .. && cmake --build .'
         
