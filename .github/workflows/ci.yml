@@ -35,15 +35,15 @@ jobs:
         env: 
           BUILD_DIR: build-gcc4.8
         run: |
-          docker exec builder bash -c 'mkdir $BUILD_DIR'
-          docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake .. && cmake --build .'
+          docker exec builder bash -c "mkdir $BUILD_DIR"
+          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake .. && cmake --build ."
       - name: Build CentOS/gcc8
         if: always()
         env:
           BUILD_DIR: build-gcc8
         run: |
-          docker exec builder bash -c 'mkdir $BUILD_DIR'
-          docker exec builder bash -c '. /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && cmake .. && cmake --build .'
+          docker exec builder bash -c "mkdir $BUILD_DIR"
+          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && cmake .. && cmake --build ."
         
   ubuntu-1804:
     strategy:
