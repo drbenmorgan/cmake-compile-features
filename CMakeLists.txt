@@ -1,14 +1,9 @@
 # Project to demo CMake compile features for C++ standard
-
-# Want to support gcc 4.9, Clang 3.5/6, Intel 15 and VS2015
-# NB: Still to be investigated how to support compile features for
-# compiler where CMake does not yet provide a '-FeatureTests' file.
+# Only covers GNU, {Apple}Clang and MSVC so far
 cmake_minimum_required(VERSION 3.8)
 project(cmake-compile-features)
 
-#-----------------------------------------------------------------------
-# Custom Intel compile features
-include(cmake/IntelCompileFeatures.cmake)
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
 
 #-----------------------------------------------------------------------
 # Basic setup
@@ -29,34 +24,23 @@ include(cmake/CheckCXXStandardLibrary.cmake)
 # Compiler Info
 # - Print, for info, detected Compiler and Version
 message(STATUS "CXX compiler ID         : '${CMAKE_CXX_COMPILER_ID}'")
-message(STATUS "CXX compiler Simulate ID: '${CMAKE_CXX_SIMULATE_ID}")
+message(STATUS "CXX compiler Simulate ID: '${CMAKE_CXX_SIMULATE_ID}'")
 message(STATUS "CXX compiler Version    : '${CMAKE_CXX_COMPILER_VERSION}'")
 
 #-----------------------------------------------------------------------
 # C++ Standard Selection - 11, 14 or 17, or 2a
-enum_option(BUILD_CXX_STANDARD
+enum_option(CMAKE_CXX_STANDARD
   DOC "C++ Standard to compile against"
-  VALUES 11 14 17 20
+  VALUES 17 20 11 14
   CASE_INSENSITIVE
   )
-set(CCF_REQUIRED_FEATURES cxx_std_${BUILD_CXX_STANDARD})
+set(CCF_REQUIRED_FEATURES cxx_std_${CMAKE_CXX_STANDARD})
 #-----------------------------------------------------------------------
 # Compiler features
 # - Do NOT want vendor extensions (e.g. no --std=gnu++11)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# - Print list of C++ features that CMake *knows* about, i.e. can check
-# for. Does *not* mean compiler supports them
-# See also
-# http://www.cmake.org/cmake/help/v3.2/prop_gbl/CMAKE_CXX_KNOWN_FEATURES.html
-message(STATUS "List of CXX features known to CMake")
-get_property(_cxx_known_features GLOBAL PROPERTY CMAKE_CXX_KNOWN_FEATURES)
-foreach(_f ${_cxx_known_features})
-  message("  ${_f}")
-endforeach()
-
-# - whereas CMAKE_CXX<std>_COMPILE_FEATURES should list those the compiler
-#   actually supports
+# - Print list of C++ features that CMake *knows* compiler to support
 foreach(_cxxstd 11 14 17 20)
   message(STATUS "List of supported CXX${_cxxstd} features:")
   foreach(_f ${CMAKE_CXX${_cxxstd}_COMPILE_FEATURES})
@@ -99,6 +83,10 @@ write_compiler_detection_header(
 # this info the the project config files
 check_cxxstdlib_implementation()
 
+# For multithreading, we may need the threads implementation
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 # Check lib features - these are things we need but for which CMake
 # provides no feature detection (i.e. are implementation details of
 # the Standard C++ library being used)
@@ -107,14 +95,14 @@ check_cxxstdlib_implementation()
 # Can always fail at configure stage based on truth of HAS_CXX_...
 # variables, or add these into the PROLOG/EPILOG entries of the compiler
 # detection header (e.g. to provide workarounds)
-check_cxx11_feature("cxx_memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
-check_cxx11_feature("cxx_memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
-check_cxx11_feature("cxx_memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
-check_cxx11_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
-check_cxx11_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
-check_cxx11_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
-check_cxx11_feature("cxx_random" HAS_CXX_RANDOM)
-check_cxx11_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD)
+check_cxx_feature("cxx_memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
+check_cxx_feature("cxx_memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
+check_cxx_feature("cxx_memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
+check_cxx_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
+check_cxx_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
+check_cxx_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
+check_cxx_feature("cxx_random" HAS_CXX_RANDOM)
+check_cxx_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD LINK_LIBRARIES Threads::Threads)
 
 # - configure our custom header to supply implementation workarounds
 # based on the above values. However, note that this effectively hardcodes
@@ -140,6 +128,9 @@ target_include_directories(ccf-features
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
+
+# ... and any additional libraries
+target_link_libraries(ccf-features PUBLIC Threads::Threads)
 
 # - and an export header
 generate_export_header(ccf-features
