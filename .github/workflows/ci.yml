@@ -66,9 +66,10 @@ jobs:
         # Set CC/CXX only if they exist
         # See https://github.community/t/possible-to-use-conditional-in-the-env-section-of-a-job/135170/2
         # for why this can be done in env: above
+        shell: bash
         run: |
-          [[ ! -z "${{ matrix.cc }}" ]] && echo "CC=${{ matrix.cc }}" >> $GITHUB_ENV
-          [[ ! -z "${{ matrix.cxx }}" ]] && echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV
+          [[ ! -z "${{ matrix.cc }}" ]] && echo "CC=${{ matrix.cc }}" >> $GITHUB_ENV || echo "No CC to set"
+          [[ ! -z "${{ matrix.cxx }}" ]] && echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV || echo "No CXX to set"
       - name: Configure
         run: |
           cmake -S. -B ./build
