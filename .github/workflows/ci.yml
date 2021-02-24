@@ -61,8 +61,8 @@ jobs:
           - { os: ubuntu-20.04, cc: clang-10, cxx: clang++10 }
     runs-on: ${{ matrix.os }}
     env:
-      CC: /usr/bin/${{ matrix.compiler.cc }}
-      CXX: /usr/bin/${{ matrix.compiler.cxx }}
+      CC: /usr/bin/${{ matrix.cc }}
+      CXX: /usr/bin/${{ matrix.cxx }}
     steps:
       - uses: actions/checkout@v2
       - name: Configure
