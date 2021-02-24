@@ -58,7 +58,7 @@ jobs:
           - { os: ubuntu-20.04, cc: clang-9, cxx: clang++-9 }
           - { os: ubuntu-20.04, cc: gcc-9, cxx: g++-9 }
           - { os: ubuntu-20.04, cc: gcc-10, cxx: g++-10 }
-          - { os: ubuntu-20.04, cc: clang-10, cxx: clang++10 }
+          - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
     runs-on: ${{ matrix.os }}
     env:
       CC: /usr/bin/${{ matrix.cc }}
@@ -89,7 +89,4 @@ jobs:
       - name: Build
         run: |
           cmake --build ./build --config RelWithDebInfo
-      - name: Test
-        run: |
-          cmake --build ./build --target test
 
