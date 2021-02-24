@@ -4,10 +4,10 @@ on: [pull_request]
 
 jobs:
   cvmfs-centos7:
-    # Run on GitHub Hosted Linux so we have Docker
+    # Run on latest GitHub Hosted Linux so we have Docker
     runs-on: [ubuntu-latest]
     steps:
-      # Install and start CVMFS, possible place for action-ization ('setup-cvmfs') 
+      # Install and start CVMFS, possible place for action-ization ('setup-cvmfs')
       - name: Install and Start CVMFS
         run: |
           sudo apt-get install lsb-release
@@ -32,7 +32,7 @@ jobs:
       # Also a little faster as we don't have to install CVMFS/start Docker for each one
       - name: Build CentOS/gcc4.8
         if: always()
-        env: 
+        env:
           BUILD_DIR: build-gcc4.8
         run: |
           docker exec builder bash -c "mkdir $BUILD_DIR"
@@ -44,19 +44,26 @@ jobs:
         run: |
           docker exec builder bash -c "mkdir $BUILD_DIR"
           docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && cmake .. && cmake --build ."
-        
-  ubuntu-1804:
+
+  ubuntu:
     strategy:
       fail-fast: false
       matrix:
-        compiler: 
-        - {cc: gcc-7, cxx: g++-7}
-        - {cc: gcc-8, cxx: g++-8}
-        - {cc: gcc-9, cxx: g++-9}
-        - {cc: clang-6.0, cxx: clang++-6.0}
-        - {cc: clang-8, cxx: clang++-8}
-        - {cc: clang-9, cxx: clang++-9}          
-    runs-on: [ubuntu-18.04]
+        # Limit compilers AFAP to packages installable directly (no ppa)
+        os: [ubuntu-18.04, ubuntu-20.04]
+        include:
+          - os: ubuntu-18.04
+            compiler:
+            - {cc: gcc-7, cxx: g++-7}
+            - {cc: gcc-8, cxx: g++-8}
+            - {cc: clang-8, cxx: clang++-8}
+            - {cc: clang-9, cxx: clang++-9}
+          - os: ubuntu-20.04
+            compiler:
+            - {cc: gcc-9, cxx: g++-9}
+            - {cc: gcc-10, cxx: g++-10}
+            - {cc: clang-10, cxx: clang++10}
+    runs-on: ${{ matrix.os }}
     env:
       CC: /usr/bin/${{ matrix.compiler.cc }}
       CXX: /usr/bin/${{ matrix.compiler.cxx }}
@@ -71,28 +78,22 @@ jobs:
           cd build
           cmake --build .
 
-  macOS-Catalina:
-    runs-on: [macos-latest]
+  macOsAndWindows:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add macOS-11.0 once public pools are available
+        os: [macos-10.15, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Configure
         run: |
-          mkdir build && cd build
-          cmake ..
+          cmake -S. -B ./build
       - name: Build
         run: |
-          cd build
-          cmake --build .
-          
-  windows-2019:
-    runs-on: [windows-latest]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure
+          cmake --build ./build --config RelWithDebInfo
+      - name: Test
         run: |
-          mkdir build && cd build
-          cmake ..
-      - name: Build
-        run: |
-          cd build
-          cmake --build . --config RelWithDebInfo
+          cmake --build ./build --target test
+
