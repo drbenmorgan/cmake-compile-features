@@ -3,11 +3,11 @@ name: CI
 on: [pull_request]
 
 jobs:
-  cvmfs-centos7:
-    # Run on GitHub Hosted Linux so we have Docker
+  CentOS7-CVMFS:
+    # Run on latest GitHub Hosted Linux so we have Docker
     runs-on: [ubuntu-latest]
     steps:
-      # Install and start CVMFS, possible place for action-ization ('setup-cvmfs') 
+      # Install and start CVMFS, possible place for action-ization ('setup-cvmfs')
       - name: Install and Start CVMFS
         run: |
           sudo apt-get install lsb-release
@@ -32,67 +32,48 @@ jobs:
       # Also a little faster as we don't have to install CVMFS/start Docker for each one
       - name: Build CentOS/gcc4.8
         if: always()
-        env: 
+        env:
           BUILD_DIR: build-gcc4.8
         run: |
-          docker exec builder bash -c "mkdir $BUILD_DIR"
-          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake .. && cmake --build ."
+          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake -S. -B./${BUILD_DIR} && cmake --build ./${BUILD_DIR}"
       - name: Build CentOS/gcc8
         if: always()
         env:
           BUILD_DIR: build-gcc8
         run: |
-          docker exec builder bash -c "mkdir $BUILD_DIR"
-          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && cmake .. && cmake --build ."
-        
-  ubuntu-1804:
+          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cmake -S. -B./${BUILD_DIR} && cmake --build ./${BUILD_DIR}"
+
+  UbuntuMacWindows:
     strategy:
       fail-fast: false
       matrix:
-        compiler: 
-        - {cc: gcc-7, cxx: g++-7}
-        - {cc: gcc-8, cxx: g++-8}
-        - {cc: gcc-9, cxx: g++-9}
-        - {cc: clang-6.0, cxx: clang++-6.0}
-        - {cc: clang-8, cxx: clang++-8}
-        - {cc: clang-9, cxx: clang++-9}          
-    runs-on: [ubuntu-18.04]
-    env:
-      CC: /usr/bin/${{ matrix.compiler.cc }}
-      CXX: /usr/bin/${{ matrix.compiler.cxx }}
+        # As the matrix is sparse, write explicitly rather than x-product and excludes
+        # Limit compilers AFAP to packages installable directly (no ppa)
+        include:
+          - { os: ubuntu-18.04, cc: gcc-7, cxx: g++-7 }
+          - { os: ubuntu-18.04, cc: gcc-8, cxx: g++-8 }
+          - { os: ubuntu-18.04, cc: clang-8, cxx: clang++-8 }
+          - { os: ubuntu-20.04, cc: clang-9, cxx: clang++-9 }
+          - { os: ubuntu-20.04, cc: gcc-9, cxx: g++-9 }
+          - { os: ubuntu-20.04, cc: gcc-10, cxx: g++-10 }
+          - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
+          - { os: macos-10.15 }
+          - { os: windows-latest }
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
+      - name: Setup build environment
+        # Set CC/CXX only if they exist
+        # See https://github.community/t/possible-to-use-conditional-in-the-env-section-of-a-job/135170/2
+        # for why this can be done in env: above
+        shell: bash
+        run: |
+          [[ ! -z "${{ matrix.cc }}" ]] && echo "CC=${{ matrix.cc }}" >> $GITHUB_ENV || echo "No CC to set"
+          [[ ! -z "${{ matrix.cxx }}" ]] && echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV || echo "No CXX to set"
       - name: Configure
         run: |
-          mkdir build && cd build
-          cmake ..
+          cmake -S. -B ./build
       - name: Build
         run: |
-          cd build
-          cmake --build .
+          cmake --build ./build --config RelWithDebInfo
 
-  macOS-Catalina:
-    runs-on: [macos-latest]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure
-        run: |
-          mkdir build && cd build
-          cmake ..
-      - name: Build
-        run: |
-          cd build
-          cmake --build .
-          
-  windows-2019:
-    runs-on: [windows-latest]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure
-        run: |
-          mkdir build && cd build
-          cmake ..
-      - name: Build
-        run: |
-          cd build
-          cmake --build . --config RelWithDebInfo
