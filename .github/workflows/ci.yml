@@ -35,15 +35,13 @@ jobs:
         env:
           BUILD_DIR: build-gcc4.8
         run: |
-          docker exec builder bash -c "mkdir $BUILD_DIR"
-          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake .. && cmake --build ."
+          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && CC=/usr/bin/gcc CXX=/usr/bin/g++ cmake -S. -B./${BUILD_DIR} && cmake --build ./${BUILD_DIR}"
       - name: Build CentOS/gcc8
         if: always()
         env:
           BUILD_DIR: build-gcc8
         run: |
-          docker exec builder bash -c "mkdir $BUILD_DIR"
-          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cd $BUILD_DIR && cmake .. && cmake --build ."
+          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cmake -S. -B./${BUILD_DIR} && cmake --build ./${BUILD_DIR}"
 
   ubuntu:
     strategy:
@@ -60,19 +58,21 @@ jobs:
           - { os: ubuntu-20.04, cc: gcc-10, cxx: g++-10 }
           - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
     runs-on: ${{ matrix.os }}
-    env:
-      CC: /usr/bin/${{ matrix.cc }}
-      CXX: /usr/bin/${{ matrix.cxx }}
     steps:
       - uses: actions/checkout@v2
+      - name: Setup build environment
+        # Set CC/CXX only if they exist
+        # See https://github.community/t/possible-to-use-conditional-in-the-env-section-of-a-job/135170/2
+        # for why this can be done in env: above
+        run: |
+          [[ ! -z "${{ matrix.cc }}" ]] && echo "CC=${{ matrix.cc }}" >> $GITHUB_ENV
+          [[ ! -z "${{ matrix.cxx }}" ]] && echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV
       - name: Configure
         run: |
-          mkdir build && cd build
-          cmake ..
+          cmake -S. -B ./build
       - name: Build
         run: |
-          cd build
-          cmake --build .
+          cmake --build ./build --config RelWithDebInfo
 
   macOsAndWindows:
     strategy:
