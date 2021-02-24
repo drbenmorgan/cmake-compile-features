@@ -51,6 +51,7 @@ jobs:
       matrix:
         # Limit compilers AFAP to packages installable directly (no ppa)
         os: [ubuntu-18.04, ubuntu-20.04]
+        compiler: []
         include:
           - os: ubuntu-18.04
             compiler:
