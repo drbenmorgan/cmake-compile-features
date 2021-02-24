@@ -1,5 +1,5 @@
 # cmake-compile-features
-Study of CMake compile features and compiler support levels for C++17, 20, ...
+Study of CMake compile features and compiler support levels for C++17, 20, 23, ...
 
 # Requirements
 - GNU, Clang, Intel, or MSVC compiler
@@ -12,37 +12,30 @@ Study of CMake compile features and compiler support levels for C++17, 20, ...
 $ ls
 CMakeLists.txt  README.md       ccf-program.cpp
 LICENSE         ccf             cmake
-$ cd build
-$ cmake ..
+$ cmake -S. -B ./build
 ... output should report info about compiler, C++ features known to
 ... CMake, and C++ features supported by the compiler
-$ cmake --build .
+$ cmake --build ./build
 ... Compilation commands should contain correct "-std=c++XY" line
 ```
 
 # Platforms tested by CI
-GitHub Actions and Travis CI are used to test the platforms:
+GitHub Actions are used to test the platforms:
 
 - GitHub
   - CentOS7 (Docker Image)
     - GCC 4.8.5 (native)
     - GCC 8.X (LCG_96 from sft.cern.ch CVMFS)
-  - Ubuntu 18.04
-    - GCC 7, 8, 9
-    - Clang 6, 8, 9
+  - Ubuntu 18.04, 20.04
+    - GCC 7, 8, 9, 10
+    - Clang 8, 9, 10
   - Windows Server 2019
     - Visual Studio 2019
   - macOS 10.15 (Catalina)
-    - Xcode 11.3.1
-- Travis CI
-  - macOS 10.14 (Mojave), Xcode 11.3.1
-  - macOS 10.14 (Mojave), Xcode 10.3
-  - macOS 10.13 (High Sierra), Xcode 10.1
     
-For additional information, see the documentation for [GitHub Hosted Runners](https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners)    
-and [Travis CI macOS Build Environment](https://docs.travis-ci.com/user/reference/osx/).
+For additional information, see the documentation for [GitHub Hosted Runners](https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners). 
 
-# Notes
+# Notes (In Flux, to be Updated)
 ## Checking for C++ Support
 Important to note the difference between *compiler* (syntax) features and
 *standard library* (implementation) features. CMake's compile features
