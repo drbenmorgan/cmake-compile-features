@@ -1,9 +1,11 @@
 # Project to demo CMake compile features for C++ standard
 # Only covers GNU, {Apple}Clang and MSVC so far
-cmake_minimum_required(VERSION 3.8)
-project(cmake-compile-features)
+cmake_minimum_required(VERSION 3.8...3.18)
+if(${CMAKE_VERSION} VERSION_LESS 3.12)
+  cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+endif()
 
-message(STATUS "CMake Version: ${CMAKE_VERSION}")
+project(cmake-compile-features)
 
 #-----------------------------------------------------------------------
 # Basic setup
@@ -16,8 +18,7 @@ include(GenerateExportHeader)
 # - Enumerated option to allow C++ Standard selection
 include(cmake/EnumeratedOption.cmake)
 
-# - Include modules for helping to check C++ stdlib features
-include(cmake/CheckCXXFeature.cmake)
+# - Stdlib checker
 include(cmake/CheckCXXStandardLibrary.cmake)
 
 #-----------------------------------------------------------------------
@@ -29,184 +30,102 @@ message(STATUS "CXX compiler Version    : '${CMAKE_CXX_COMPILER_VERSION}'")
 
 #-----------------------------------------------------------------------
 # C++ Standard Selection - 11, 14 or 17, or 2a
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enum_option(CMAKE_CXX_STANDARD
   DOC "C++ Standard to compile against"
   VALUES 17 20 11 14
   CASE_INSENSITIVE
   )
 set(CCF_REQUIRED_FEATURES cxx_std_${CMAKE_CXX_STANDARD})
+
 #-----------------------------------------------------------------------
 # Compiler features
-# - Do NOT want vendor extensions (e.g. no --std=gnu++11)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# - Simple header-only checks
+include(CheckIncludeFileCXX)
 
-# - Print list of C++ features that CMake *knows* compiler to support
-foreach(_cxxstd 11 14 17 20)
-  message(STATUS "List of supported CXX${_cxxstd} features:")
-  foreach(_f ${CMAKE_CXX${_cxxstd}_COMPILE_FEATURES})
-    message("  ${_f}")
-  endforeach()
-endforeach()
+# - A very dumb wrapper round try_compile
+# Yes, CheckCXXSourceCompiles does this, but only want a message, nothing else!
+function(check_cxx_feature _flag)
+  try_compile(${_flag} ${ARGN})
+  # Can be simplified after 3.17 with CHECK_PASS/FAIL
+  set(__preamble "Checking C++ feature ${_flag} -")
+  if(${_flag})
+    message(STATUS "${__preamble} Success")
+  else()
+    message(STATUS "${__preamble} Failed")
+  endif()
+endfunction()
 
-# - Can also write a compiler detection header. This is useful
-# for providing workarounds for features not provided by the compiler/stdlib
-# See also:
-#  https://cmake.org/cmake/help/v3.8/module/WriteCompilerDetectionHeader.html
-#
-include(WriteCompilerDetectionHeader)
-write_compiler_detection_header(
-  # Public, detail or private header? Probably private unless CCF
-  # exposes types in other public interfaces
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/ccf/detail/ccf_compiler_support.hpp"
-  PREFIX CCF
-  COMPILERS AppleClang Clang GNU Intel MSVC
-  # Separate headers on a per compiler basis for clarity
-  OUTPUT_DIR ccf/detail/Compilers
-  OUTPUT_FILES_VAR CCF_COMPILER_HEADERS
-  FEATURES
-    cxx_thread_local
-  PROLOG "// This is a custom prolog"
-  EPILOG "// This is a custom epilog"
-  )
+# - Default checks output directory
+set(testCxxFeatures_CHECK_DIR ${PROJECT_BINARY_DIR}/_cxxchecks)
 
-# - Check standard library implementation and features
-# Important to distinguish between the compiler and the eventual
-# standard library it links to. For example, Clang on Linux may link to
-# the GNU library, Intel may use GNU library or its own.
-#
-# Here, we actually want to confirm the compiler as configured so far
-# can compile, link and run test programs that exercise the standard
-# library feature to be checked.
-#
-# - To begin with, determine the actual implementation and version.
-# This is informational rather than direct useful, e.g. may export
-# this info the the project config files
+#-----------------------------------------------------------------------------
+# - C++ Language Feature Checks
+# -- __has_include
+check_cxx_feature(CXX_HAS_HAS_INCLUDE
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_include
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_has_include.cc)
+
+# -- Structured bindings
+check_cxx_feature(CXX_HAS_STRUCTURED_BINDINGS
+  ${testCxxFeatures_CHECK_DIR}/cxx_structured_bindings
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_structured_bindings.cc)
+
+#-----------------------------------------------------------------------------
+# - C++ Standard Library Feature Checks
+# -- stdlib implementation
 check_cxxstdlib_implementation()
 
-# For multithreading, we may need the threads implementation
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
+# -- std::variant
+check_include_file_cxx(variant CXXSTDLIB_HAS_VARIANT)
+if(NOT CXXSTDLIB_HAS_VARIANT)
+  check_include_file_cxx(experimental/variant CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT)
+endif()
 
-# Check lib features - these are things we need but for which CMake
-# provides no feature detection (i.e. are implementation details of
-# the Standard C++ library being used)
-# Works, but can't then add these to list of known/supported features
-# and get automatic compiler flag support
-# Can always fail at configure stage based on truth of HAS_CXX_...
-# variables, or add these into the PROLOG/EPILOG entries of the compiler
-# detection header (e.g. to provide workarounds)
-check_cxx_feature("cxx_memory_shared_ptr" HAS_CXX_MEMORY_SHARED_PTR)
-check_cxx_feature("cxx_memory_unique_ptr" HAS_CXX_MEMORY_UNIQUE_PTR)
-check_cxx_feature("cxx_memory_weak_ptr" HAS_CXX_MEMORY_WEAK_PTR)
-check_cxx_feature("cxx_memory_make_unique" HAS_CXX_MEMORY_MAKE_UNIQUE)
-check_cxx_feature("cxx_unordered_map" HAS_CXX_UNORDERED_MAP)
-check_cxx_feature("cxx_unordered_set" HAS_CXX_UNORDERED_SET)
-check_cxx_feature("cxx_random" HAS_CXX_RANDOM)
-check_cxx_feature("cxx_thread_thread" HAS_CXX_THREAD_THREAD LINK_LIBRARIES Threads::Threads)
+# -- std::filesystem (and stdlib implementation)
+# 1. Which header is used
+check_include_file_cxx(filesystem CXXSTDLIB_HAS_FILESYSTEM)
+if(NOT CXXSTDLIB_HAS_FILESYSTEM)
+  check_include_file_cxx(experimental/filesystem CXXSTDLIB_HAS_EXPERIMENTAL_FILESYSTEM)
+endif()
 
-# - configure our custom header to supply implementation workarounds
-# based on the above values. However, note that this effectively hardcodes
-# for one stdlib implementation, so the header *probably* should not
-# be installed.
-configure_file(ccf/detail/ccf_stdlib_support.hpp.in
-  ccf/detail/ccf_stdlib_support.hpp
-  )
+# 2. Which library provides the implementation
+# - Known options:
+#   - builtin to normal stdlib
+#   - GNU: stdc++fs
+#   - Clang: c++fs
+check_cxx_feature(CXXSTDLIB_FILESYSTEM_NATIVE
+  ${testCxxFeatures_CHECK_DIR}/cxx_filesystem/native
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_filesystem.cc)
 
-#-----------------------------------------------------------------------
-# Compile this project's library from the sources...
-add_library(ccf-features SHARED ccf/ccf.hpp ccf/ccf.cpp)
+if(NOT CXXSTDLIB_FILESYSTEM_NATIVE)
+  # GNU libstdc++fs
+  check_cxx_feature(CXXSTDLIB_FILESYSTEM_STDCXXFS
+    ${testCxxFeatures_CHECK_DIR}/cxx_filesystem/stdc++fs
+    ${PROJECT_SOURCE_DIR}/cmake/check_cxx_filesystem.cc
+    LINK_LIBRARIES stdc++fs)
+  # LLVM libc++fs
+  check_cxx_feature(CXXSTDLIB_FILESYSTEM_CXXFS
+    ${testCxxFeatures_CHECK_DIR}/cxx_filesystem/c++fs
+    ${PROJECT_SOURCE_DIR}/cmake/check_cxx_filesystem.cc
+    LINK_LIBRARIES c++fs)
+endif()
 
-#... with the required compile features
-# PUBLIC means that clients of libccf will inherit the features of ccf
-# and hence be compiled with the appropriate flags
-target_compile_features(ccf-features PUBLIC ${CCF_REQUIRED_FEATURES})
+# 3. Derive name of library for use in reports
+set(CXXSTDLIB_FILESYSTEM_LIBRARY "unsupported")
+if(CXXSTDLIB_FILESYSTEM_NATIVE)
+  set(CXXSTDLIB_FILESYSTEM_LIBRARY "native")
+elseif(CXXSTDLIB_FILESYSTEM_STDCXXFS)
+  set(CXXSTDLIB_FILESYSTEM_LIBRARY "stdc++fs")
+elseif(CXXSTDLIB_FILESYSTEM_CXXFS)
+  set(CXXSTDLIB_FILESYSTEM_LIBRARY "c++fs")
+endif()
 
-#... and the needed include paths
-target_include_directories(ccf-features
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  )
+#-----------------------------------------------------------------------------
+# - Configure and build reporting application/test
+configure_file(checkCXXFeatures.cc.in "${PROJECT_BINARY_DIR}/checkCXXFeatures.cc")
+add_executable(checkCXXFeatures "${PROJECT_BINARY_DIR}/checkCXXFeatures.cc")
 
-# ... and any additional libraries
-target_link_libraries(ccf-features PUBLIC Threads::Threads)
-
-# - and an export header
-generate_export_header(ccf-features
-  BASE_NAME ccf
-  EXPORT_FILE_NAME ccf/ccf_export.h
-  )
-
-#-----------------------------------------------------------------------
-# Now the project program (equally, this could be a client program)
-add_executable(ccf-program ccf-program.cpp)
-
-#... and link it to the library. Even though we haven't set compile_features
-# for the program, it "inherits" the PUBLIC ones from the target.
-# In consequence, it's compiled with the appropriate flags!
-target_link_libraries(ccf-program ccf-features)
-
-
-
-#-----------------------------------------------------------------------
-# Install and Support files
-# - Here, we would like clients to automatically pick up needed
-#   compiler requirements on the C++ Standard
-# What you should find is that the "ccf-exports.cmake" file sets up an
-# imported target for libccf, and sets the INTERFACE_COMPILE_FEATURES
-# to those listed in 'CCF_REQUIRED_FEATURES'. That means that clients
-# compiling with CMake and linking to the library will also require
-# those features (and hence be compiled against the required standard).
-# It's basically the same behaviour seen above with ccf-program
-# The issue of course is that other features like shared_ptr and so
-# on cannot be added to this list - this is where listing the stdlib
-# implementation and details may be useful.
-
-include(GNUInstallDirs)
-set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake")
-
-install(TARGETS ccf-features ccf-program EXPORT ccf-exports DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-install(FILES
-  ccf/ccf.hpp
-  "${CMAKE_CURRENT_BINARY_DIR}/ccf/ccf_export.h"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ccf"
-  )
-install(DIRECTORY
-  "${CMAKE_CURRENT_BINARY_DIR}/ccf/detail"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ccf/"
-  )
-
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-  ${PROJECT_BINARY_DIR}/ccf-configversion.cmake
-  VERSION 1.2.3
-  COMPATIBILITY SameMajorVersion
-  )
-
-# - Build tree config file(s)
-set(INSTALL_INCDIR "${PROJECT_SOURCE_DIR}")
-
-configure_package_config_file(cmake/ccf-config.cmake.in
-  ${PROJECT_BINARY_DIR}/ccf-config.cmake
-  INSTALL_DESTINATION ${PROJECT_BINARY_DIR}
-  PATH_VARS INSTALL_INCDIR
-  INSTALL_PREFIX ${PROJECT_BINARY_DIR}
-  )
-
-export(EXPORT ccf-exports NAMESPACE "ccf::" FILE "${PROJECT_BINARY_DIR}/ccf-exports.cmake")
-
-# - Install Tree config files
-set(INSTALL_INCDIR "${CMAKE_INSTALL_INCLUDEDIR}")
-
-configure_package_config_file(cmake/ccf-config.cmake.in
-  ${PROJECT_BINARY_DIR}/InstallTreeFiles/ccf-config.cmake
-  INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/ccf"
-  PATH_VARS INSTALL_INCDIR
-  )
-
-install(EXPORT ccf-exports NAMESPACE "ccf::" DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/ccf")
-install(FILES ${PROJECT_BINARY_DIR}/InstallTreeFiles/ccf-config.cmake
-  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/ccf"
-  )
+enable_testing()
+add_test(NAME checkCXXFeatures COMMAND checkCXXFeatures)
