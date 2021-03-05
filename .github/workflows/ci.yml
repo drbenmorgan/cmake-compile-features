@@ -29,7 +29,7 @@ jobs:
         env:
           BUILD_DIR: build-gcc8
         run: |
-          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cmake -S. -B./${BUILD_DIR} && cmake --build ./${BUILD_DIR}"
+          docker exec builder bash -c ". /cvmfs/sft.cern.ch/lcg/views/LCG_96b/x86_64-centos7-gcc8-opt/setup.sh && cmake -S. -B./${BUILD_DIR} && cmake --build ./${BUILD_DIR} && cd ./${BUILD_DIR} && ctest -VV"
 
   UbuntuMacWindows:
     strategy:
@@ -64,4 +64,7 @@ jobs:
       - name: Build
         run: |
           cmake --build ./build --config RelWithDebInfo
+      - name: Test
+        run: |
+          cd ./build && ctest -VV
 
