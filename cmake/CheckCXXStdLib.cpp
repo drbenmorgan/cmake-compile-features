@@ -32,7 +32,11 @@ int main() {
   std::cout << "libc++;" << _LIBCPP_VERSION;
 #elif defined(__GLIBCXX__)
   std::cout << "libstdc++;" << __GLIBCXX__;
-
+#elif defined(_MSC_VER)
+  // Not *totally* clear yet this is the true runtime
+  // lib version(s), but clear enough proxy for now
+  // See also _MSVC_STL_VERSION and _MSVC_STL_UPDATE
+  std::cout << "msvc;" << _MSC_VER;
 // - And so on for any others...
 #else
   return 1;
