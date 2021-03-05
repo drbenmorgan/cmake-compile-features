@@ -1,0 +1,96 @@
+#include <iostream>
+#include <string>
+
+// Simplify reported of a cmakedefine01 symbol as a Yes/No answer
+#define AS_YES_OR_NO(X) (X == 1 ? "Yes" : "No")
+
+//----------------------------------------------------------------------------
+// CMake values
+#define CMAKE_SYSTEM "@CMAKE_SYSTEM@"
+#define CMAKE_CXX_COMPILER_ID "@CMAKE_CXX_COMPILER_ID@"
+#define CMAKE_CXX_COMPILER_VERSION "@CMAKE_CXX_COMPILER_VERSION@"
+#define CMAKE_CXX_STANDARD "@CMAKE_CXX_STANDARD@"
+
+//----------------------------------------------------------------------------
+// - C++ Language Features
+#cmakedefine01 CXX_HAS_HAS_INCLUDE
+
+bool reportHasInclude(std::ostream& os) {
+  os << "- __has_include : " << AS_YES_OR_NO(CXX_HAS_HAS_INCLUDE) << std::endl;
+  return CXX_HAS_HAS_INCLUDE == 1;
+}
+
+#cmakedefine01 CXX_HAS_STRUCTURED_BINDINGS
+
+bool reportStructuredBindings(std::ostream& os) {
+    os << "- Structured Bindings : " << AS_YES_OR_NO(CXX_HAS_STRUCTURED_BINDINGS) << std::endl;
+    return CXX_HAS_STRUCTURED_BINDINGS == 1;
+}
+
+//----------------------------------------------------------------------------
+// - Standard Library Features
+// -- Variant support
+#cmakedefine01 CXXSTDLIB_HAS_VARIANT
+#cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT
+
+bool reportVariant(std::ostream& os) {
+  bool isSupported = (CXXSTDLIB_HAS_VARIANT == 1 || CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT == 1);
+  bool isExperimental = (CXXSTDLIB_HAS_VARIANT == 0 && CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT == 1);
+
+  os << "- variant : " << AS_YES_OR_NO(isSupported) << std::endl;
+
+  if (isSupported) {
+    os << "  - Header : `<" << (isExperimental ? "experimental/variant" : "variant") << ">`\n";
+  }
+
+  return isSupported;
+}
+
+// -- Filesystem support
+#cmakedefine01 CXXSTDLIB_HAS_FILESYSTEM
+#cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_FILESYSTEM
+#cmakedefine CXXSTDLIB_FILESYSTEM_LIBRARY "@CXXSTDLIB_FILESYSTEM_LIBRARY@"
+
+bool reportFilesystem(std::ostream& os) {
+  bool isSupported = (CXXSTDLIB_HAS_FILESYSTEM == 1 || CXXSTDLIB_HAS_EXPERIMENTAL_FILESYSTEM == 1);
+  bool isExperimental = (CXXSTDLIB_HAS_FILESYSTEM == 0 && CXXSTDLIB_HAS_EXPERIMENTAL_FILESYSTEM == 1);
+
+  os << "- filesystem : " << AS_YES_OR_NO(isSupported) << "\n";
+
+  if (isSupported) {
+    os << "  - Header is  : `<" << (isExperimental ? "experimental/filesystem" : "filesystem") << ">`\n"
+          "  - Library is : `" << CXXSTDLIB_FILESYSTEM_LIBRARY << "`\n";
+  }
+
+  return isSupported;
+}
+
+int main() {
+  std::cout << "# checkCXXFeatures C++ Feature Availability Report" << std::endl;
+
+  std::cout << "## System, Compiler, and Standard\n"
+            << "- CMAKE_SYSTEM               : " << CMAKE_SYSTEM << "\n"
+            << "- CMAKE_CXX_COMPILER_ID      : " << CMAKE_CXX_COMPILER_ID << "\n"
+            << "- CMAKE_CXX_COMPILER_VERSION : " << CMAKE_CXX_COMPILER_VERSION << "\n"
+            << "- CMAKE_CXX_STANDARD         : " << CMAKE_CXX_STANDARD << "\n"
+            << "- __cplusplus                : " << __cplusplus << "\n"
+            << std::endl;
+
+  bool cxxStdIsSupported = true;
+
+  std::cout << "## C++ Language Features" << std::endl;
+  cxxStdIsSupported = reportHasInclude(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportStructuredBindings(std::cout) && cxxStdIsSupported;
+  std::cout << std::endl;
+
+  std::cout << "## C++ Standard Library Features" << std::endl;
+  cxxStdIsSupported = reportFilesystem(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportVariant(std::cout) && cxxStdIsSupported;
+  std::cout << std::endl;
+
+  std::cout << "## Summary\n"
+            << "- C++" << CMAKE_CXX_STANDARD << " : " << (cxxStdIsSupported ? "Supported" : "Unsupported")
+            << std::endl;
+
+  return cxxStdIsSupported ? 0 : 1;
+}
