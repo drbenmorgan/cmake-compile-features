@@ -66,5 +66,5 @@ jobs:
           cmake --build ./build --config RelWithDebInfo
       - name: Test
         run: |
-          cd ./build && ctest -VV
+          cd ./build && ctest -VV -C RelWithDebInfo
 
