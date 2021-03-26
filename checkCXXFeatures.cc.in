@@ -19,6 +19,12 @@ bool reportAutoReturnType(std::ostream& os) {
   return CXX_HAS_AUTO_RETURN_TYPE == 1;
 }
 
+#cmakedefine01 CXX_HAS_ATTRIBUTE
+bool reportAttribute(std::ostream& os) {
+  os << "- [[ attribute-list ]] : " << AS_YES_OR_NO(CXX_HAS_ATTRIBUTE) << std::endl;
+  return CXX_HAS_ATTRIBUTE == 1;
+}
+
 #cmakedefine01 CXX_HAS_HAS_INCLUDE
 bool reportHasInclude(std::ostream& os) {
   os << "- __has_include : " << AS_YES_OR_NO(CXX_HAS_HAS_INCLUDE) << std::endl;
@@ -156,6 +162,7 @@ int main() {
 
   std::cout << "## C++ Language Features" << std::endl;
   cxxStdIsSupported = reportAutoReturnType(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportAttribute(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInclude(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportGenericLambda(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportRelaxedConstexpr(std::cout) && cxxStdIsSupported;
