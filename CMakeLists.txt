@@ -90,6 +90,12 @@ if(NOT CXXSTDLIB_HAS_OPTIONAL)
   check_include_file_cxx(experimental/optional CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL)
 endif()
 
+# -- std::string_view
+check_include_file_cxx(string_view CXXSTDLIB_HAS_STRING_VIEW)
+if(NOT CXXSTDLIB_HAS_STRING_VIEW)
+  check_include_file_cxx(experimental/string_view CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW)
+endif()
+
 # -- std::variant
 check_include_file_cxx(variant CXXSTDLIB_HAS_VARIANT)
 if(NOT CXXSTDLIB_HAS_VARIANT)

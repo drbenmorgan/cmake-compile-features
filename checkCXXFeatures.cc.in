@@ -63,6 +63,23 @@ bool reportOptional(std::ostream& os) {
   return isSupported;
 }
 
+// -- Optional support
+#cmakedefine01 CXXSTDLIB_HAS_STRING_VIEW
+#cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW
+
+bool reportString_View(std::ostream& os) {
+  bool isSupported = (CXXSTDLIB_HAS_STRING_VIEW == 1 || CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW == 1);
+  bool isExperimental = (CXXSTDLIB_HAS_STRING_VIEW == 0 && CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW == 1);
+
+  os << "- string_view : " << AS_YES_OR_NO(isSupported) << std::endl;
+
+  if (isSupported) {
+    os << "  - Header : `<" << (isExperimental ? "experimental/string_view" : "string_view") << ">`\n";
+  }
+
+  return isSupported;
+}
+
 
 // -- Variant support
 #cmakedefine01 CXXSTDLIB_HAS_VARIANT
@@ -122,6 +139,7 @@ int main() {
   cxxStdIsSupported = reportAny(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportFilesystem(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportOptional(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportString_View(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportVariant(std::cout) && cxxStdIsSupported;
   std::cout << std::endl;
 
