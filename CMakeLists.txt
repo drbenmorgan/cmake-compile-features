@@ -78,6 +78,12 @@ check_cxx_feature(CXX_HAS_STRUCTURED_BINDINGS
 # -- stdlib implementation
 check_cxxstdlib_implementation()
 
+# -- std::any
+check_include_file_cxx(any CXXSTDLIB_HAS_ANY)
+if(NOT CXXSTDLIB_HAS_ANY)
+  check_include_file_cxx(experimental/any CXXSTDLIB_HAS_EXPERIMENTAL_ANY)
+endif()
+
 # -- std::optional
 check_include_file_cxx(optional CXXSTDLIB_HAS_OPTIONAL)
 if(NOT CXXSTDLIB_HAS_OPTIONAL)
