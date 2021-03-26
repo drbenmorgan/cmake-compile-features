@@ -46,6 +46,14 @@ bool reportAny(std::ostream& os) {
   return isSupported;
 }
 
+// -- std::make_unique support
+#cmakedefine01 CXX_HAS_MAKE_UNIQUE
+
+bool reportMake_Unique(std::ostream& os) {
+    os << "- make_unique : " << AS_YES_OR_NO(CXX_HAS_MAKE_UNIQUE) << std::endl;
+    return CXX_HAS_MAKE_UNIQUE == 1;
+}
+
 // -- Optional support
 #cmakedefine01 CXXSTDLIB_HAS_OPTIONAL
 #cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL
@@ -138,6 +146,7 @@ int main() {
   std::cout << "## C++ Standard Library Features" << std::endl;
   cxxStdIsSupported = reportAny(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportFilesystem(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportMake_Unique(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportOptional(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportString_View(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportVariant(std::cout) && cxxStdIsSupported;

@@ -84,23 +84,6 @@ if(NOT CXXSTDLIB_HAS_ANY)
   check_include_file_cxx(experimental/any CXXSTDLIB_HAS_EXPERIMENTAL_ANY)
 endif()
 
-# -- std::optional
-check_include_file_cxx(optional CXXSTDLIB_HAS_OPTIONAL)
-if(NOT CXXSTDLIB_HAS_OPTIONAL)
-  check_include_file_cxx(experimental/optional CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL)
-endif()
-
-# -- std::string_view
-check_include_file_cxx(string_view CXXSTDLIB_HAS_STRING_VIEW)
-if(NOT CXXSTDLIB_HAS_STRING_VIEW)
-  check_include_file_cxx(experimental/string_view CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW)
-endif()
-
-# -- std::variant
-check_include_file_cxx(variant CXXSTDLIB_HAS_VARIANT)
-if(NOT CXXSTDLIB_HAS_VARIANT)
-  check_include_file_cxx(experimental/variant CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT)
-endif()
 
 # -- std::filesystem (and stdlib implementation)
 # 1. Which header is used
@@ -139,6 +122,29 @@ elseif(CXXSTDLIB_FILESYSTEM_STDCXXFS)
   set(CXXSTDLIB_FILESYSTEM_LIBRARY "stdc++fs")
 elseif(CXXSTDLIB_FILESYSTEM_CXXFS)
   set(CXXSTDLIB_FILESYSTEM_LIBRARY "c++fs")
+endif()
+
+# -- (memory) make_unique
+check_cxx_feature(CXX_HAS_MAKE_UNIQUE
+  ${testCxxFeatures_CHECK_DIR}/cxx_make_unique
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_make_unique.cc)
+
+# -- std::optional
+check_include_file_cxx(optional CXXSTDLIB_HAS_OPTIONAL)
+if(NOT CXXSTDLIB_HAS_OPTIONAL)
+  check_include_file_cxx(experimental/optional CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL)
+endif()
+
+# -- std::string_view
+check_include_file_cxx(string_view CXXSTDLIB_HAS_STRING_VIEW)
+if(NOT CXXSTDLIB_HAS_STRING_VIEW)
+  check_include_file_cxx(experimental/string_view CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW)
+endif()
+
+# -- std::variant
+check_include_file_cxx(variant CXXSTDLIB_HAS_VARIANT)
+if(NOT CXXSTDLIB_HAS_VARIANT)
+  check_include_file_cxx(experimental/variant CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT)
 endif()
 
 #-----------------------------------------------------------------------------
