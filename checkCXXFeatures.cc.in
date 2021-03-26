@@ -25,6 +25,18 @@ bool reportHasInclude(std::ostream& os) {
   return CXX_HAS_HAS_INCLUDE == 1;
 }
 
+#cmakedefine01 CXX_HAS_RELAXED_CONSTEXPR
+bool reportRelaxedConstexpr(std::ostream& os) {
+    os << "- Relaxed constexpr : " << AS_YES_OR_NO(CXX_HAS_RELAXED_CONSTEXPR) << std::endl;
+    return CXX_HAS_RELAXED_CONSTEXPR == 1;
+}
+
+#cmakedefine01 CXX_HAS_GENERIC_LAMBDA
+bool reportGenericLambda(std::ostream& os) {
+    os << "- Generic lambda : " << AS_YES_OR_NO(CXX_HAS_GENERIC_LAMBDA) << std::endl;
+    return CXX_HAS_GENERIC_LAMBDA == 1;
+}
+
 #cmakedefine01 CXX_HAS_STRUCTURED_BINDINGS
 bool reportStructuredBindings(std::ostream& os) {
     os << "- Structured Bindings : " << AS_YES_OR_NO(CXX_HAS_STRUCTURED_BINDINGS) << std::endl;
@@ -145,6 +157,8 @@ int main() {
   std::cout << "## C++ Language Features" << std::endl;
   cxxStdIsSupported = reportAutoReturnType(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInclude(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportGenericLambda(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportRelaxedConstexpr(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportStructuredBindings(std::cout) && cxxStdIsSupported;
   std::cout << std::endl;
 

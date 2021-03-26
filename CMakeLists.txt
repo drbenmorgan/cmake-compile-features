@@ -73,6 +73,16 @@ check_cxx_feature(CXX_HAS_HAS_INCLUDE
   ${testCxxFeatures_CHECK_DIR}/cxx_has_include
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_has_include.cc)
 
+# -- Relaxed constexpr
+check_cxx_feature(CXX_HAS_RELAXED_CONSTEXPR
+  ${testCxxFeatures_CHECK_DIR}/cxx_relaxed_constexpr
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_relaxed_constexpr.cc)
+
+# -- Generic lambdas
+check_cxx_feature(CXX_HAS_GENERIC_LAMBDA
+  ${testCxxFeatures_CHECK_DIR}/cxx_generic_lambda
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_generic_lambda.cc)
+
 # -- Structured bindings
 check_cxx_feature(CXX_HAS_STRUCTURED_BINDINGS
   ${testCxxFeatures_CHECK_DIR}/cxx_structured_bindings
