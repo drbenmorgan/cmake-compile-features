@@ -29,6 +29,24 @@ bool reportStructuredBindings(std::ostream& os) {
 
 //----------------------------------------------------------------------------
 // - Standard Library Features
+// -- Optional support
+#cmakedefine01 CXXSTDLIB_HAS_OPTIONAL
+#cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL
+
+bool reportOptional(std::ostream& os) {
+  bool isSupported = (CXXSTDLIB_HAS_OPTIONAL == 1 || CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL == 1);
+  bool isExperimental = (CXXSTDLIB_HAS_OPTIONAL == 0 && CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL == 1);
+
+  os << "- optional : " << AS_YES_OR_NO(isSupported) << std::endl;
+
+  if (isSupported) {
+    os << "  - Header : `<" << (isExperimental ? "experimental/optional" : "optional") << ">`\n";
+  }
+
+  return isSupported;
+}
+
+
 // -- Variant support
 #cmakedefine01 CXXSTDLIB_HAS_VARIANT
 #cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT
@@ -85,6 +103,7 @@ int main() {
 
   std::cout << "## C++ Standard Library Features" << std::endl;
   cxxStdIsSupported = reportFilesystem(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportOptional(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportVariant(std::cout) && cxxStdIsSupported;
   std::cout << std::endl;
 

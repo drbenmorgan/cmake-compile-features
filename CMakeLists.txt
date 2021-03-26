@@ -38,6 +38,7 @@ enum_option(CMAKE_CXX_STANDARD
   CASE_INSENSITIVE
   )
 set(CCF_REQUIRED_FEATURES cxx_std_${CMAKE_CXX_STANDARD})
+message(STATUS "CXX standard            : '${CMAKE_CXX_STANDARD}'")
 
 #-----------------------------------------------------------------------
 # Compiler features
@@ -76,6 +77,12 @@ check_cxx_feature(CXX_HAS_STRUCTURED_BINDINGS
 # - C++ Standard Library Feature Checks
 # -- stdlib implementation
 check_cxxstdlib_implementation()
+
+# -- std::optional
+check_include_file_cxx(optional CXXSTDLIB_HAS_OPTIONAL)
+if(NOT CXXSTDLIB_HAS_OPTIONAL)
+  check_include_file_cxx(experimental/optional CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL)
+endif()
 
 # -- std::variant
 check_include_file_cxx(variant CXXSTDLIB_HAS_VARIANT)
