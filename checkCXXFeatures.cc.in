@@ -13,15 +13,19 @@
 
 //----------------------------------------------------------------------------
 // - C++ Language Features
-#cmakedefine01 CXX_HAS_HAS_INCLUDE
+#cmakedefine01 CXX_HAS_AUTO_RETURN_TYPE
+bool reportAutoReturnType(std::ostream& os) {
+  os << "- auto Return Type Deducution : " << AS_YES_OR_NO(CXX_HAS_AUTO_RETURN_TYPE) << std::endl;
+  return CXX_HAS_AUTO_RETURN_TYPE == 1;
+}
 
+#cmakedefine01 CXX_HAS_HAS_INCLUDE
 bool reportHasInclude(std::ostream& os) {
   os << "- __has_include : " << AS_YES_OR_NO(CXX_HAS_HAS_INCLUDE) << std::endl;
   return CXX_HAS_HAS_INCLUDE == 1;
 }
 
 #cmakedefine01 CXX_HAS_STRUCTURED_BINDINGS
-
 bool reportStructuredBindings(std::ostream& os) {
     os << "- Structured Bindings : " << AS_YES_OR_NO(CXX_HAS_STRUCTURED_BINDINGS) << std::endl;
     return CXX_HAS_STRUCTURED_BINDINGS == 1;
@@ -139,6 +143,7 @@ int main() {
   bool cxxStdIsSupported = true;
 
   std::cout << "## C++ Language Features" << std::endl;
+  cxxStdIsSupported = reportAutoReturnType(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInclude(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportStructuredBindings(std::cout) && cxxStdIsSupported;
   std::cout << std::endl;

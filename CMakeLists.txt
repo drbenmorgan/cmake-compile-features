@@ -63,6 +63,11 @@ set(testCxxFeatures_CHECK_DIR ${PROJECT_BINARY_DIR}/_cxxchecks)
 
 #-----------------------------------------------------------------------------
 # - C++ Language Feature Checks
+# -- auto return type deduction
+check_cxx_feature(CXX_HAS_AUTO_RETURN_TYPE
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_auto_return_type
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_auto_return_type.cc)
+
 # -- __has_include
 check_cxx_feature(CXX_HAS_HAS_INCLUDE
   ${testCxxFeatures_CHECK_DIR}/cxx_has_include
@@ -83,7 +88,6 @@ check_include_file_cxx(any CXXSTDLIB_HAS_ANY)
 if(NOT CXXSTDLIB_HAS_ANY)
   check_include_file_cxx(experimental/any CXXSTDLIB_HAS_EXPERIMENTAL_ANY)
 endif()
-
 
 # -- std::filesystem (and stdlib implementation)
 # 1. Which header is used
