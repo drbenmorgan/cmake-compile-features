@@ -25,6 +25,18 @@ bool reportAttribute(std::ostream& os) {
   return CXX_HAS_ATTRIBUTE == 1;
 }
 
+#cmakedefine01 CXX_HAS_CONSTEXPR_IF
+bool reportConstexprIf(std::ostream& os) {
+  os << "- constexpr if : " << AS_YES_OR_NO(CXX_HAS_CONSTEXPR_IF) << std::endl;
+  return CXX_HAS_CONSTEXPR_IF == 1;
+}
+
+#cmakedefine01 CXX_HAS_CTAD
+bool reportCTAD(std::ostream& os) {
+  os << "- Class Template Argument Deduction : " << AS_YES_OR_NO(CXX_HAS_CTAD) << std::endl;
+  return CXX_HAS_CTAD == 1;
+}
+
 #cmakedefine01 CXX_HAS_HAS_INCLUDE
 bool reportHasInclude(std::ostream& os) {
   os << "- __has_include : " << AS_YES_OR_NO(CXX_HAS_HAS_INCLUDE) << std::endl;
@@ -169,6 +181,8 @@ int main() {
   std::cout << "## C++ Language Features" << std::endl;
   cxxStdIsSupported = reportAutoReturnType(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportAttribute(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportConstexprIf(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportCTAD(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInclude(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInitIf(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportGenericLambda(std::cout) && cxxStdIsSupported;

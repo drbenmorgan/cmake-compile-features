@@ -82,6 +82,16 @@ check_cxx_feature(CXX_HAS_ATTRIBUTE
   ${testCxxFeatures_CHECK_DIR}/cxx_has_attribute
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_attributes.cc)
 
+# -- constexpr if
+check_cxx_feature(CXX_HAS_CONSTEXPR_IF
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_constexpr_if
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_constexpr_if.cc)
+
+# -- Class Template Argument Deduction
+check_cxx_feature(CXX_HAS_CTAD
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_ctad
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_ctad.cc)
+
 # -- __has_include
 check_cxx_feature(CXX_HAS_HAS_INCLUDE
   ${testCxxFeatures_CHECK_DIR}/cxx_has_include
