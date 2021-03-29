@@ -41,7 +41,7 @@ set(CCF_REQUIRED_FEATURES cxx_std_${CMAKE_CXX_STANDARD})
 message(STATUS "CXX standard            : '${CMAKE_CXX_STANDARD}'")
 
 # Always turn warnings into errors (so try_compile will treat them so)
-if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
