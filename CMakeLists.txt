@@ -102,6 +102,11 @@ check_cxx_feature(CXX_HAS_INIT_IF
   ${testCxxFeatures_CHECK_DIR}/cxx_has_init_if
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_init_if.cc)
 
+# -- inline variables
+check_cxx_feature(CXX_HAS_INLINE_VARIABLES
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_inline_variables
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_inline_variables.cc)
+
 # -- Relaxed constexpr
 check_cxx_feature(CXX_HAS_RELAXED_CONSTEXPR
   ${testCxxFeatures_CHECK_DIR}/cxx_has_relaxed_constexpr

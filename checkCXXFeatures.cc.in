@@ -49,6 +49,12 @@ bool reportHasInitIf(std::ostream& os) {
   return CXX_HAS_INIT_IF == 1;
 }
 
+#cmakedefine01 CXX_HAS_INLINE_VARIABLES
+bool reportHasInlineVariables(std::ostream& os) {
+  os << "- Inline variables : " << AS_YES_OR_NO(CXX_HAS_INLINE_VARIABLES) << std::endl;
+  return CXX_HAS_INIT_IF == 1;
+}
+
 #cmakedefine01 CXX_HAS_RELAXED_CONSTEXPR
 bool reportRelaxedConstexpr(std::ostream& os) {
     os << "- Relaxed constexpr : " << AS_YES_OR_NO(CXX_HAS_RELAXED_CONSTEXPR) << std::endl;
@@ -185,6 +191,7 @@ int main() {
   cxxStdIsSupported = reportCTAD(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInclude(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInitIf(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportHasInlineVariables(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportGenericLambda(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportRelaxedConstexpr(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportStructuredBindings(std::cout) && cxxStdIsSupported;
