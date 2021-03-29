@@ -40,6 +40,13 @@ enum_option(CMAKE_CXX_STANDARD
 set(CCF_REQUIRED_FEATURES cxx_std_${CMAKE_CXX_STANDARD})
 message(STATUS "CXX standard            : '${CMAKE_CXX_STANDARD}'")
 
+# Always turn warnings into errors (so try_compile will treat them so)
+if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+endif()
+
 #-----------------------------------------------------------------------
 # Compiler features
 # - Simple header-only checks
@@ -80,19 +87,24 @@ check_cxx_feature(CXX_HAS_HAS_INCLUDE
   ${testCxxFeatures_CHECK_DIR}/cxx_has_include
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_has_include.cc)
 
+# -- init statement in if/switch
+check_cxx_feature(CXX_HAS_INIT_IF
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_init_if
+  ${PROJECT_SOURCE_DIR}/cmake/check_cxx_init_if.cc)
+
 # -- Relaxed constexpr
 check_cxx_feature(CXX_HAS_RELAXED_CONSTEXPR
-  ${testCxxFeatures_CHECK_DIR}/cxx_relaxed_constexpr
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_relaxed_constexpr
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_relaxed_constexpr.cc)
 
 # -- Generic lambdas
 check_cxx_feature(CXX_HAS_GENERIC_LAMBDA
-  ${testCxxFeatures_CHECK_DIR}/cxx_generic_lambda
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_generic_lambda
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_generic_lambda.cc)
 
 # -- Structured bindings
 check_cxx_feature(CXX_HAS_STRUCTURED_BINDINGS
-  ${testCxxFeatures_CHECK_DIR}/cxx_structured_bindings
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_structured_bindings
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_structured_bindings.cc)
 
 #-----------------------------------------------------------------------------
@@ -147,7 +159,7 @@ endif()
 
 # -- (memory) make_unique
 check_cxx_feature(CXX_HAS_MAKE_UNIQUE
-  ${testCxxFeatures_CHECK_DIR}/cxx_make_unique
+  ${testCxxFeatures_CHECK_DIR}/cxx_has_make_unique
   ${PROJECT_SOURCE_DIR}/cmake/check_cxx_make_unique.cc)
 
 # -- std::optional
