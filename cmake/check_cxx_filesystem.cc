@@ -1,3 +1,5 @@
+// Check that trivial use of <filesystem> works
+// - https://en.cppreference.com/w/cpp/filesystem
 #include <iostream>
 #if __has_include( <filesystem>)
 #  include <filesystem>
