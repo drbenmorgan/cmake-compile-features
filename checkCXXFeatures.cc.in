@@ -13,15 +13,61 @@
 
 //----------------------------------------------------------------------------
 // - C++ Language Features
-#cmakedefine01 CXX_HAS_HAS_INCLUDE
+#cmakedefine01 CXX_HAS_AUTO_RETURN_TYPE
+bool reportAutoReturnType(std::ostream& os) {
+  os << "- auto Return Type Deducution : " << AS_YES_OR_NO(CXX_HAS_AUTO_RETURN_TYPE) << std::endl;
+  return CXX_HAS_AUTO_RETURN_TYPE == 1;
+}
 
+#cmakedefine01 CXX_HAS_ATTRIBUTE
+bool reportAttribute(std::ostream& os) {
+  os << "- [[ attribute-list ]] : " << AS_YES_OR_NO(CXX_HAS_ATTRIBUTE) << std::endl;
+  return CXX_HAS_ATTRIBUTE == 1;
+}
+
+#cmakedefine01 CXX_HAS_CONSTEXPR_IF
+bool reportConstexprIf(std::ostream& os) {
+  os << "- constexpr if : " << AS_YES_OR_NO(CXX_HAS_CONSTEXPR_IF) << std::endl;
+  return CXX_HAS_CONSTEXPR_IF == 1;
+}
+
+#cmakedefine01 CXX_HAS_CTAD
+bool reportCTAD(std::ostream& os) {
+  os << "- Class Template Argument Deduction : " << AS_YES_OR_NO(CXX_HAS_CTAD) << std::endl;
+  return CXX_HAS_CTAD == 1;
+}
+
+#cmakedefine01 CXX_HAS_HAS_INCLUDE
 bool reportHasInclude(std::ostream& os) {
   os << "- __has_include : " << AS_YES_OR_NO(CXX_HAS_HAS_INCLUDE) << std::endl;
   return CXX_HAS_HAS_INCLUDE == 1;
 }
 
-#cmakedefine01 CXX_HAS_STRUCTURED_BINDINGS
+#cmakedefine01 CXX_HAS_INIT_IF
+bool reportHasInitIf(std::ostream& os) {
+  os << "- Initializer in if/switch : " << AS_YES_OR_NO(CXX_HAS_INIT_IF) << std::endl;
+  return CXX_HAS_INIT_IF == 1;
+}
 
+#cmakedefine01 CXX_HAS_INLINE_VARIABLES
+bool reportHasInlineVariables(std::ostream& os) {
+  os << "- Inline variables : " << AS_YES_OR_NO(CXX_HAS_INLINE_VARIABLES) << std::endl;
+  return CXX_HAS_INIT_IF == 1;
+}
+
+#cmakedefine01 CXX_HAS_RELAXED_CONSTEXPR
+bool reportRelaxedConstexpr(std::ostream& os) {
+    os << "- Relaxed constexpr : " << AS_YES_OR_NO(CXX_HAS_RELAXED_CONSTEXPR) << std::endl;
+    return CXX_HAS_RELAXED_CONSTEXPR == 1;
+}
+
+#cmakedefine01 CXX_HAS_GENERIC_LAMBDA
+bool reportGenericLambda(std::ostream& os) {
+    os << "- Generic lambda : " << AS_YES_OR_NO(CXX_HAS_GENERIC_LAMBDA) << std::endl;
+    return CXX_HAS_GENERIC_LAMBDA == 1;
+}
+
+#cmakedefine01 CXX_HAS_STRUCTURED_BINDINGS
 bool reportStructuredBindings(std::ostream& os) {
     os << "- Structured Bindings : " << AS_YES_OR_NO(CXX_HAS_STRUCTURED_BINDINGS) << std::endl;
     return CXX_HAS_STRUCTURED_BINDINGS == 1;
@@ -29,6 +75,66 @@ bool reportStructuredBindings(std::ostream& os) {
 
 //----------------------------------------------------------------------------
 // - Standard Library Features
+// -- Any support
+#cmakedefine01 CXXSTDLIB_HAS_ANY
+#cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_ANY
+
+bool reportAny(std::ostream& os) {
+  bool isSupported = (CXXSTDLIB_HAS_ANY == 1 || CXXSTDLIB_HAS_EXPERIMENTAL_ANY == 1);
+  bool isExperimental = (CXXSTDLIB_HAS_ANY == 0 && CXXSTDLIB_HAS_EXPERIMENTAL_ANY == 1);
+
+  os << "- any : " << AS_YES_OR_NO(isSupported) << std::endl;
+
+  if (isSupported) {
+    os << "  - Header : `<" << (isExperimental ? "experimental/any" : "any") << ">`\n";
+  }
+
+  return isSupported;
+}
+
+// -- std::make_unique support
+#cmakedefine01 CXX_HAS_MAKE_UNIQUE
+
+bool reportMake_Unique(std::ostream& os) {
+    os << "- make_unique : " << AS_YES_OR_NO(CXX_HAS_MAKE_UNIQUE) << std::endl;
+    return CXX_HAS_MAKE_UNIQUE == 1;
+}
+
+// -- Optional support
+#cmakedefine01 CXXSTDLIB_HAS_OPTIONAL
+#cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL
+
+bool reportOptional(std::ostream& os) {
+  bool isSupported = (CXXSTDLIB_HAS_OPTIONAL == 1 || CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL == 1);
+  bool isExperimental = (CXXSTDLIB_HAS_OPTIONAL == 0 && CXXSTDLIB_HAS_EXPERIMENTAL_OPTIONAL == 1);
+
+  os << "- optional : " << AS_YES_OR_NO(isSupported) << std::endl;
+
+  if (isSupported) {
+    os << "  - Header : `<" << (isExperimental ? "experimental/optional" : "optional") << ">`\n";
+  }
+
+  return isSupported;
+}
+
+// -- Optional support
+#cmakedefine01 CXXSTDLIB_HAS_STRING_VIEW
+#cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW
+
+bool reportString_View(std::ostream& os) {
+  bool isSupported = (CXXSTDLIB_HAS_STRING_VIEW == 1 || CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW == 1);
+  bool isExperimental = (CXXSTDLIB_HAS_STRING_VIEW == 0 && CXXSTDLIB_HAS_EXPERIMENTAL_STRING_VIEW == 1);
+
+  os << "- string_view : " << AS_YES_OR_NO(isSupported) << std::endl;
+
+  if (isSupported) {
+    os << "  - Header : `<" << (isExperimental ? "experimental/string_view" : "string_view") << ">`\n";
+  }
+
+  return isSupported;
+}
+
+
 // -- Variant support
 #cmakedefine01 CXXSTDLIB_HAS_VARIANT
 #cmakedefine01 CXXSTDLIB_HAS_EXPERIMENTAL_VARIANT
@@ -79,12 +185,24 @@ int main() {
   bool cxxStdIsSupported = true;
 
   std::cout << "## C++ Language Features" << std::endl;
+  cxxStdIsSupported = reportAutoReturnType(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportAttribute(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportConstexprIf(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportCTAD(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportHasInclude(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportHasInitIf(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportHasInlineVariables(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportGenericLambda(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportRelaxedConstexpr(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportStructuredBindings(std::cout) && cxxStdIsSupported;
   std::cout << std::endl;
 
   std::cout << "## C++ Standard Library Features" << std::endl;
+  cxxStdIsSupported = reportAny(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportFilesystem(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportMake_Unique(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportOptional(std::cout) && cxxStdIsSupported;
+  cxxStdIsSupported = reportString_View(std::cout) && cxxStdIsSupported;
   cxxStdIsSupported = reportVariant(std::cout) && cxxStdIsSupported;
   std::cout << std::endl;
 
